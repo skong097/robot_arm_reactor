@@ -13,6 +13,8 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/web/static',
             glob('arm_reactor_core/web/static/*')),
+        ('share/' + package_name + '/models/gesture',
+            glob('models/gesture/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,6 +27,7 @@ setup(
         'console_scripts': [
             'dashboard_node = arm_reactor_core.dashboard_node:main',
             'reactor_node = arm_reactor_core.reactor_node:main',
+            'gesture_detector_node = arm_reactor_core.gesture_detector_node:main',
         ],
     },
 )

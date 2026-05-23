@@ -19,8 +19,6 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            'gesture_detector_node = omx_reactor.gesture_detector_node:main',
-        ],
+        'console_scripts': [],
     },
 )

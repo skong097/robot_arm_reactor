@@ -14,8 +14,6 @@ setup(
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/models/external_cam',
             glob('models/external_cam/*')),
-        ('share/' + package_name + '/models/gesture',
-            glob('models/gesture/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
