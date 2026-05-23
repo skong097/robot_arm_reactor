@@ -74,6 +74,20 @@
     // 'emotion' / 'rapport' 는 engaging-analytics 가 직접 /ws/v1/engaging 으로 처리
   }
 
+  // Gazebo view 동적 zoom (CSS transform — 브라우저 클라이언트 측만)
+  (function initZoom() {
+    const slider = $('gazebo-zoom');
+    const label = $('gazebo-zoom-label');
+    const img = $('gazebo-view-img');
+    if (!slider || !img) return;
+    function apply(val) {
+      img.style.transform = `scale(${val})`;
+      if (label) label.textContent = `${parseFloat(val).toFixed(1)}x`;
+    }
+    slider.addEventListener('input', (e) => apply(e.target.value));
+    apply(slider.value);
+  })();
+
   function connect() {
     const ws = new WebSocket(`ws://${location.host}/ws/stream`);
     ws.onmessage = (ev) => {

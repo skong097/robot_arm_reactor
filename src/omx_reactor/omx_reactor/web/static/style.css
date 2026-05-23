@@ -71,11 +71,35 @@ main.omx-main > section.engaging-analytics { grid-column: auto !important; }
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
 }
+.omx-right .omx-gazebo-view {
+  overflow: hidden;     /* zoom-in 시 img 가 container 밖으로 튀어나가지 X */
+}
 .omx-right .omx-gazebo-view img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
+  transform-origin: center;
+  transition: transform 0.1s ease-out;
+}
+
+/* zoom slider */
+.omx-right .omx-gazebo-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-1);
+  font-size: var(--fs-xs);
+}
+.omx-right .omx-gazebo-controls input[type=range] {
+  flex: 1 1 auto;
+  accent-color: var(--cyan-accent);
+}
+.omx-right #gazebo-zoom-label {
+  min-width: 40px;
+  text-align: right;
+  color: var(--cyan-accent);
+  font-family: var(--font-mono);
 }
 .omx-right h3 .motion-tag {
   display: inline-block;
