@@ -10,7 +10,7 @@ from std_msgs.msg import String
 
 from dobi_npc_msgs.msg import EmotionState, RapportEvent
 
-from omx_reactor.context import Context, make_emotion_signal
+from omx_reactor.context import Context, GestureSignal, make_emotion_signal
 from omx_reactor.motions import MOTIONS
 from omx_reactor.motion_mapper import select_motion
 from omx_reactor.motion_scheduler import MotionScheduler, SchedulerAction
@@ -41,9 +41,11 @@ class ReactorNode(Node):
         self._latest_conf: float = 0.0
         self._latest_source: str = 'face'
         self._latest_track: int = -1
+        self._pending_gesture: dict | None = None   # 1 tick 만 살아있는 gesture event
 
         self.create_subscription(EmotionState, '/emotion/state', self._on_emotion, 10)
         self.create_subscription(RapportEvent, '/rapport/event', self._on_rapport, 10)
+        self.create_subscription(String, '/gesture/event', self._on_gesture, 10)
 
         self._state_pub = self.create_publisher(String, '/omx_reactor/state', 10)
         self.create_timer(tick, self._tick)
@@ -67,6 +69,18 @@ class ReactorNode(Node):
         if msg.emotion.track_id != -1:
             self._latest_track = int(msg.emotion.track_id)
 
+    def _on_gesture(self, msg: String):
+        """gesture_detector_node JSON event — 다음 tick 만 살아있도록 큐잉."""
+        try:
+            payload = json.loads(msg.data)
+        except json.JSONDecodeError:
+            return
+        self._pending_gesture = {
+            'event': str(payload.get('event_type', '')),
+            'confidence': float(payload.get('confidence', 0.0)),
+            'source': str(payload.get('source', '')),
+        }
+
     # ── tick ──────────────────────────────────────────────
     def _tick(self):
         t_now = self._now_sec()
@@ -79,7 +93,17 @@ class ReactorNode(Node):
             confidence=self._latest_conf, source=self._latest_source,
             deadband=self._deadband,
         )
-        ctx = Context(emotion=emo, session_event=session_event, t_now=t_now)
+        # gesture: 받은 이벤트는 본 tick 만 살아있음 — 사용 후 None reset
+        gesture: GestureSignal | None = None
+        if self._pending_gesture is not None:
+            gesture = GestureSignal(
+                event=self._pending_gesture['event'],
+                confidence=self._pending_gesture['confidence'],
+                source=self._pending_gesture['source'],
+            )
+            self._pending_gesture = None
+        ctx = Context(emotion=emo, gesture=gesture,
+                      session_event=session_event, t_now=t_now)
 
         chosen = select_motion(ctx, MOTIONS)
         if chosen is not None:

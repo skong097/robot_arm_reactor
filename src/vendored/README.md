@@ -68,16 +68,20 @@ fresh clone 시 다음 절차로 모델을 부트스트랩하세요.
 ```bash
 WS=$(pwd)   # ~/omx_reactor 가정
 MODELS_DIR="$WS/src/vendored/dobi_npc_emotion/models"
-mkdir -p "$MODELS_DIR"
+GESTURE_DIR="$WS/src/omx_reactor/models/gesture"
+mkdir -p "$MODELS_DIR" "$GESTURE_DIR"
 # mediapipe FaceLandmarker (얼굴 랜드마크 + Blendshapes)
 curl -fsSL https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task \
   -o "$MODELS_DIR/face_landmarker.task"
 # mediapipe EfficientDet-Lite0 (person detection, gefa 후속용)
 curl -fsSL https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/latest/efficientdet_lite0.tflite \
   -o "$MODELS_DIR/efficientdet_lite0.tflite"
-ls -lh "$MODELS_DIR"
+# mediapipe HandLandmarker (omx_reactor 의 gesture_detector_node 용)
+curl -fsSL https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task \
+  -o "$GESTURE_DIR/hand_landmarker.task"
+ls -lh "$MODELS_DIR" "$GESTURE_DIR"
 ```
-Expected: 두 파일 다운로드 (face_landmarker.task ~3.7MB, efficientdet_lite0.tflite ~4.4MB).
+Expected: 3 파일 다운로드 (face_landmarker ~3.7MB, efficientdet_lite0 ~4.4MB, hand_landmarker ~7MB).
 
 ### 옵션 B — doby_controller 로컬 카피 (개발자 본인)
 

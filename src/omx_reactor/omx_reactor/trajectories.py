@@ -95,3 +95,16 @@ def traj_console() -> JointTrajectory:
         _point([0.0, -1.0, 0.5, 0.75],  3.4),
         _point(HOME,                    4.0),
     ])
+
+
+def traj_hand_out() -> JointTrajectory:
+    """사용자가 손 내밀면 OMX 도 손 내밂 (mimic) — joint2 수평 + joint3 펴기 reach
+    + 1s hold + home 복귀. 3.5s total. velocity peak ~0.91 rad/s.
+    """
+    REACH = [0.0, 0.0, 0.0, 0.5]
+    return _traj([
+        _point(HOME,  0.4),
+        _point(REACH, 1.5),
+        _point(REACH, 2.5),    # 1s hold
+        _point(HOME,  3.5),
+    ])

@@ -46,6 +46,12 @@ def generate_launch_description():
                      name='omx_dashboard_node', output='screen',
                      parameters=[{'http_port': 8800}])
 
+    # gesture detector — /webcam/image_raw → /gesture/event (hand visibility mimic)
+    # model 부트스트랩 필요: src/vendored/README.md 의 외부 모델 부트스트랩 절차
+    gesture = Node(package='omx_reactor', executable='gesture_detector_node',
+                   name='gesture_detector_node', output='screen',
+                   parameters=[{'cooldown_sec': 5.0}])
+
     return LaunchDescription([
         camera_arg,
         camera_launch,
@@ -54,4 +60,5 @@ def generate_launch_description():
         rapport,
         reactor,
         dashboard,
+        gesture,
     ])

@@ -16,6 +16,8 @@ setup(
             glob('omx_reactor/web/static/*')),
         ('share/' + package_name + '/models/external_cam',
             glob('models/external_cam/*')),
+        ('share/' + package_name + '/models/gesture',
+            glob('models/gesture/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,6 +30,7 @@ setup(
         'console_scripts': [
             'reactor_node = omx_reactor.reactor_node:main',
             'dashboard_node = omx_reactor.dashboard_node:main',
+            'gesture_detector_node = omx_reactor.gesture_detector_node:main',
         ],
     },
 )

@@ -15,9 +15,15 @@ class EmotionSignal:
     source: str       # 'face' | 'voice' | 'fused'
 
 
-# P1+ 확장 자리 (지금은 정의만 없음 — 추가 시 여기에 dataclass 추가)
-# @dataclass
-# class GestureSignal: ...
+@dataclass
+class GestureSignal:
+    """gesture_detector_node 의 /gesture/event 출력 — 1 tick 만 살아있음."""
+    event: str          # 'hand_visible' | ... (확장 시 추가)
+    confidence: float   # 0.0 ~ 1.0
+    source: str         # 'mediapipe.HandLandmarker'
+
+
+# P2+ 자리 (지금은 정의만 없음 — 추가 시 여기에 dataclass 추가)
 # @dataclass
 # class PoseSignal: ...
 
@@ -26,10 +32,10 @@ class EmotionSignal:
 class Context:
     """매 tick reactor 가 합성하는 입력."""
     emotion: EmotionSignal | None     # P0 source
-    # gesture: GestureSignal | None   # P1
-    # pose: PoseSignal | None         # P2
     session_event: str | None         # 'new_track' | 'track_gone' | None (한 tick 만)
     t_now: float                      # 시계 (테스트 주입 용이)
+    gesture: GestureSignal | None = None   # P1 — 1 tick 만 (default None, 후방 호환)
+    # pose: PoseSignal | None         # P2
 
 
 def make_emotion_signal(v: float, a: float, confidence: float = 1.0,

@@ -2,11 +2,13 @@ import pytest
 
 from omx_reactor.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
+    traj_hand_out,
     JOINT_NAMES,
 )
 
 
-ALL_FACTORIES = [traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console]
+ALL_FACTORIES = [traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
+                 traj_hand_out]
 
 
 @pytest.mark.parametrize('factory', ALL_FACTORIES)
