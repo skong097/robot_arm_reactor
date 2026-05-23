@@ -97,6 +97,19 @@
       <engagement-timeline id="ea-timeline"></engagement-timeline>
     </section>
 
+    <!-- 오른쪽 column — OMX Gazebo view + 모션 이벤트 -->
+    <section class="card omx-right">
+      <h3>로봇 팔 움직임</h3>
+      <div class="omx-gazebo-view">
+        <div class="omx-gazebo-placeholder">(Gazebo view 임베드 — 다음 step)</div>
+      </div>
+
+      <h4 class="card__subtitle">모션 이벤트 (현재 상태 + 로봇 모션 ID)</h4>
+      <ul class="omx-motion-list" id="motion-events">
+        <li class="muted">(모션 발사 시 기록)</li>
+      </ul>
+    </section>
+
   </main>
 
   <!-- omx_reactor — vendored engaging-analytics.js 의 init() 이 window.store.get('mode')==='engaging'
@@ -119,5 +132,6 @@
   <script src="/static/engagement-timeline.js"></script>
   <script src="/static/engaging-analytics.js"></script>
   <script src="/static/app.js"></script>
+
 </body>
 </html>

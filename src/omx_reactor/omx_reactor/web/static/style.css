@@ -35,12 +35,32 @@
 .status-bar .sep { color: var(--text-muted); }
 
 .omx-main {
-  display: flex;
-  flex-direction: column;
+  /* 1x2 반응형 — 폭 920px (450×2 + gap) 이상이면 좌:감정분석 / 우:로봇팔.
+     그 아래로는 1 column 으로 wrap (오른쪽이 아래로 내려옴). */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
   gap: var(--space-4);
   padding: var(--space-4);
-  max-width: 1100px;
+  max-width: 1400px;
   margin: 0 auto;
+  align-items: start;
+}
+
+.omx-right .omx-gazebo-view {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--space-2);
+}
+.omx-right .omx-gazebo-placeholder {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
 }
 
 /* 이벤트 로그 — omx_reactor 고유 */
@@ -62,3 +82,25 @@
 }
 #events li.motion { color: var(--pink-soft); }
 #events li.rapport { color: var(--text-secondary); }
+
+/* ───── 모션 이벤트 list (omx 고유) ───── */
+.omx-motion-list {
+  list-style: none;
+  margin: var(--space-2, 8px) 0 0 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+}
+.omx-motion-list li.mev {
+  padding: 4px 6px;
+  border-bottom: 1px dashed var(--border);
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+.omx-motion-list li.mev .mev-ts { color: var(--text-muted); min-width: 76px; }
+.omx-motion-list li.mev .mev-id { color: var(--cyan-accent); font-weight: 600; min-width: 88px; }
+.omx-motion-list li.mev .mev-state { color: var(--text-secondary); }
+.omx-motion-list li.muted { padding: 4px 6px; color: var(--text-muted); }

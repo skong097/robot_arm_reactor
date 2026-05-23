@@ -11,7 +11,8 @@
  */
 (function () {
   const $ = (id) => document.getElementById(id);
-  const eventsEl = $('events');
+  const motionEventsEl = $('motion-events');
+  let _lastMotionId = null;
 
   function setStatus(p) {
     if (!p) return;
@@ -29,32 +30,45 @@
     }
   }
 
-  function pushEvent(kind, text) {
-    if (!eventsEl) return;
+  function pushMotionEvent(p) {
+    if (!motionEventsEl) return;
+    // 첫 placeholder 제거
+    if (motionEventsEl.children.length === 1 && motionEventsEl.children[0].classList.contains('muted')) {
+      motionEventsEl.innerHTML = '';
+    }
     const li = document.createElement('li');
-    li.className = kind;
-    const ts = new Date().toLocaleTimeString();
-    li.textContent = `${ts}  ${text}`;
-    eventsEl.prepend(li);
-    while (eventsEl.children.length > 20) eventsEl.lastChild.remove();
+    li.className = 'mev';
+    const ts = new Date().toLocaleTimeString('ko-KR');
+    const quad = p.quadrant || (p.in_deadband ? 'deadband' : '-');
+    const v = (p.v !== null && p.v !== undefined) ? p.v.toFixed(2) : '-';
+    const a = (p.a !== null && p.a !== undefined) ? p.a.toFixed(2) : '-';
+    const session = p.session_event ? ` ${p.session_event}` : '';
+    li.innerHTML =
+      `<span class="mev-ts">${ts}</span>` +
+      `<span class="mev-id">▶ ${p.current_motion}</span>` +
+      `<span class="mev-state">${quad}  V=${v} A=${a}${session}</span>`;
+    motionEventsEl.prepend(li);
+    while (motionEventsEl.children.length > 30) motionEventsEl.lastChild.remove();
   }
 
   function handle(msg) {
     if (msg.type === 'snapshot') {
       const pay = msg.payload || {};
-      if (pay.reactor) setStatus(pay.reactor);
+      if (pay.reactor) {
+        setStatus(pay.reactor);
+        _lastMotionId = pay.reactor.current_motion || null;
+      }
     } else if (msg.type === 'reactor') {
       const p = msg.payload;
       setStatus(p);
-      if (p.current_motion) {
-        const tag = p.session_event ? ` (${p.session_event})` : '';
-        pushEvent('motion', `▶ ${p.current_motion}${tag}`);
+      // current_motion 이 바뀐 순간에만 push (매 100ms publish 라 spam 방지)
+      const cur = p.current_motion || null;
+      if (cur && cur !== _lastMotionId) {
+        pushMotionEvent(p);
       }
-    } else if (msg.type === 'rapport') {
-      const p = msg.payload;
-      pushEvent('rapport', `${p.event_type}  w=${p.weight.toFixed(2)}  ${p.reason}`);
+      _lastMotionId = cur;
     }
-    // 'emotion' 은 engaging-analytics 가 처리 — 본 app 는 무시
+    // 'emotion' / 'rapport' 는 engaging-analytics 가 직접 /ws/v1/engaging 으로 처리
   }
 
   function connect() {
