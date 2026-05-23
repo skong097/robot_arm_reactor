@@ -83,9 +83,10 @@ main.omx-main > section.engaging-analytics { grid-column: auto !important; }
   flex-direction: column;
 }
 .omx-right .omx-motion-list {
-  flex: 1 1 auto;
-  max-height: none;     /* 220px 제한 해제 — 카드 stretch 된 만큼 늘림 */
-  min-height: 100px;
+  flex: 1 1 0;
+  min-height: 0;        /* flex item scroll 위한 필수 — 0 미만이면 카드 늘어남 */
+  max-height: none;
+  overflow-y: auto;     /* 15개 한계 + 넘침 시 우측 스크롤바 */
 }
 
 /* 이벤트 로그 — omx_reactor 고유 */

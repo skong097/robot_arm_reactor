@@ -48,7 +48,7 @@
       `<span class="mev-id">▶ ${p.current_motion}</span>` +
       `<span class="mev-state">${quad}  V=${v} A=${a}${session}</span>`;
     motionEventsEl.prepend(li);
-    while (motionEventsEl.children.length > 30) motionEventsEl.lastChild.remove();
+    while (motionEventsEl.children.length > 15) motionEventsEl.lastChild.remove();
   }
 
   function handle(msg) {
