@@ -28,6 +28,7 @@ def generate_launch_description():
             'motion_pack': 'openarm_motion_pack',
             'camera': LaunchConfiguration('camera'),
             'file_path': LaunchConfiguration('file_path'),
+            'arm_view_mode': 'urdf',
         }.items(),
     )
 

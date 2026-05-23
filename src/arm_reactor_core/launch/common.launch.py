@@ -22,6 +22,8 @@ def generate_launch_description():
                                        description='v4l2|file|external|gazebo')
     file_path_arg = DeclareLaunchArgument('file_path', default_value='',
                                           description='camera=file 의 비디오 경로')
+    arm_view_mode_arg = DeclareLaunchArgument('arm_view_mode', default_value='mjpeg',
+                                              description='mjpeg | urdf — dashboard 우측 패널 모드')
 
     omx_pack = FindPackageShare('omx_motion_pack')
     camera_launch = IncludeLaunchDescription(
@@ -52,7 +54,10 @@ def generate_launch_description():
 
     dashboard = Node(package='arm_reactor_core', executable='dashboard_node',
                      name='omx_dashboard_node', output='screen',
-                     parameters=[{'http_port': 8800}])
+                     parameters=[{
+                         'http_port': 8800,
+                         'arm_view_mode': LaunchConfiguration('arm_view_mode'),
+                     }])
 
     reactor = Node(package='arm_reactor_core', executable='reactor_node',
                    name='omx_reactor_node', output='screen',
@@ -61,7 +66,7 @@ def generate_launch_description():
                    }])
 
     return LaunchDescription([
-        motion_pack, camera_arg, file_path_arg,
+        motion_pack, camera_arg, file_path_arg, arm_view_mode_arg,
         camera_launch,
         geva, rapport, gesture, dashboard, reactor,
     ])
