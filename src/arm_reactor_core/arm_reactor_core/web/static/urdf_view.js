@@ -93,6 +93,8 @@
         };
 
         robot = loader.parse(xml);
+        // ROS z-up → three.js y-up 변환 (URDF 가 정자로 보이도록 -90° X 축 회전)
+        robot.rotation.x = -Math.PI / 2;
         scene.add(robot);
         console.log('[urdf_view] robot loaded, joints:', Object.keys(robot.joints || {}));
 
