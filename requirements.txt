@@ -1,0 +1,13 @@
+# OMX Reactor — Python pip 의존성
+# 주의: mediapipe 설치 시 numpy 2.x / opencv-* 를 user site 에 같이 끌어와
+#       시스템 ROS 의 numpy 1.26.4 / cv2 4.6.0 충돌 가능. 설치 후 다음 cleanup 필수:
+#         pip uninstall --yes numpy opencv-python opencv-python-headless opencv-contrib-python
+#         python3 -c "import numpy, cv2; print(numpy.__version__, cv2.__version__)"
+#       → 1.26.4 / 4.6.0 재확인.
+
+mediapipe==0.10.14
+
+# 대시보드 (Task 11)
+fastapi
+uvicorn[standard]
+websockets
