@@ -15,7 +15,9 @@ from omx_reactor.motions import MOTIONS
 from omx_reactor.motion_mapper import select_motion
 from omx_reactor.motion_scheduler import MotionScheduler, SchedulerAction
 from omx_reactor.session_tracker import SessionTracker
-from omx_reactor.omx_trajectory_sender import OmxTrajectorySender
+from arm_reactor_core.dispatch import Dispatch
+from arm_reactor_core.gripper_sender import GripperSender
+from arm_reactor_core.trajectory_sender import TrajectorySender
 
 
 class ReactorNode(Node):
@@ -34,11 +36,9 @@ class ReactorNode(Node):
 
         self._session = SessionTracker(bye_grace_sec=self._bye_grace)
         self._scheduler = MotionScheduler(cooldown_default_sec=cd)
-        # 두 sender — trajectory.joint_names[0] 으로 dispatch 분기
-        self._arm_sender = OmxTrajectorySender(
-            self, action_name='/arm_controller/follow_joint_trajectory')
-        self._gripper_sender = OmxTrajectorySender(
-            self, action_name='/gripper_controller/follow_joint_trajectory')
+        # sender registry — action_name 별 lazy 생성/캐싱 (Dispatch.kind 로 클래스 선택)
+        self._senders: dict[str, object] = {}
+        self._pending_count: int = 0
 
         self._latest_v: float = 0.0
         self._latest_a: float = 0.0
@@ -115,22 +115,48 @@ class ReactorNode(Node):
             if action == SchedulerAction.START:
                 self._dispatch(chosen)
             elif action == SchedulerAction.INTERRUPT:
-                # 두 sender 둘 다 cancel — 어느 게 활성인지 무관
-                self._arm_sender.cancel_current()
-                self._gripper_sender.cancel_current()
+                self._cancel_all()
                 self._dispatch(chosen)
             # QUEUE / IGNORE 는 아무 것도 안 함
 
         self._publish_state(ctx, t_now)
 
+    def _sender_for(self, dispatch: Dispatch):
+        """action_name 별 lazy 생성/캐싱 — Dispatch.kind 로 sender class 선택."""
+        s = self._senders.get(dispatch.action_name)
+        if s is None:
+            cls = TrajectorySender if dispatch.kind == 'trajectory' else GripperSender
+            s = cls(self, dispatch.action_name)
+            self._senders[dispatch.action_name] = s
+        return s
+
     def _dispatch(self, motion):
         self.get_logger().info(f'▶ Motion {motion.id} (priority={motion.priority})')
-        traj = motion.trajectory()
-        # trajectory.joint_names[0] 으로 sender 결정 — gripper_* 시작 시 gripper sender
-        sender = (self._gripper_sender
-                  if traj.joint_names and traj.joint_names[0].startswith('gripper')
-                  else self._arm_sender)
-        sender.send(traj, on_finish=lambda: self._on_motion_finish())
+        dispatches = motion.trajectory()
+        if not dispatches:
+            self.get_logger().warn(
+                f'Motion {motion.id} returned empty dispatch list — skip')
+            self._on_motion_finish()
+            return
+        self._pending_count = len(dispatches)
+        for d in dispatches:
+            sender = self._sender_for(d)
+            if d.kind == 'trajectory':
+                sender.send(d.msg, on_finish=self._on_one_done)
+            else:  # 'gripper'
+                # d.msg 는 GripperCommand.Goal — position 만 GripperSender.send 에 전달
+                pos = float(d.msg.command.position)
+                sender.send(pos, on_finish=self._on_one_done)
+
+    def _on_one_done(self):
+        self._pending_count -= 1
+        if self._pending_count == 0:
+            self._on_motion_finish()
+
+    def _cancel_all(self):
+        for sender in self._senders.values():
+            sender.cancel_current()
+        self._pending_count = 0   # 늦은 콜백이 새 motion finish 트리거 안 하도록
 
     def _on_motion_finish(self):
         t_now = self._now_sec()
