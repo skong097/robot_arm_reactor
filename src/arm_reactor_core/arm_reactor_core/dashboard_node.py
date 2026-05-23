@@ -31,7 +31,7 @@ import cv2
 
 from dobi_npc_msgs.msg import EmotionState, RapportEvent
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -164,6 +164,17 @@ class DashboardNode(Node):
                 'reactor': self._omx_snapshot['reactor'],
                 'events': list(self._omx_snapshot['events']),
             })
+
+        # ── sub-spec c — arm view config + URDF ────────────────
+        @app.get('/api/config')
+        async def config():
+            return JSONResponse({'arm_view_mode': self._arm_view_mode})
+
+        @app.get('/api/openarm/urdf')
+        async def urdf():
+            if self._urdf_xml is None:
+                return Response('robot_description not yet received', status_code=503)
+            return Response(self._urdf_xml, media_type='application/xml')
 
         @app.websocket('/ws/v1/engaging')
         async def ws_engaging(ws: WebSocket):
