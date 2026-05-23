@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import time
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -42,7 +41,6 @@ class ReactorNode(Node):
         self._latest_conf: float = 0.0
         self._latest_source: str = 'face'
         self._latest_track: int = -1
-        self._pending_session_event: str | None = None
 
         self.create_subscription(EmotionState, '/emotion/state', self._on_emotion, 10)
         self.create_subscription(RapportEvent, '/rapport/event', self._on_rapport, 10)
