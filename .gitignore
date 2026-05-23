@@ -1,0 +1,32 @@
+# --- ROS2 / colcon ---
+build/
+install/
+log/
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# --- Runtime / 데모 산출물 ---
+*.log
+log_*/
+demo_recordings/
+*.mp4
+*.webm
+
+# --- mediapipe / 모델 캐시 (사용자 home 외 위치 권장이지만 안전망) ---
+*.task
+*.onnx
+*.tflite
