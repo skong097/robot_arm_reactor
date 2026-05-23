@@ -14,6 +14,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/EmotionState.msg"
   "msg/RapportEvent.msg"
+  "msg/PersonTrack.msg"
+  "msg/PersonTrackArray.msg"
   DEPENDENCIES std_msgs
 )
 
