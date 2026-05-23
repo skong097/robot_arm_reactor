@@ -13,7 +13,12 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/web/static',
-            glob('arm_reactor_core/web/static/*')),
+            glob('arm_reactor_core/web/static/*.html') +
+            glob('arm_reactor_core/web/static/*.js') +
+            glob('arm_reactor_core/web/static/*.css')),
+        ('share/' + package_name + '/web/static/vendor',
+            glob('arm_reactor_core/web/static/vendor/*.js') +
+            glob('arm_reactor_core/web/static/vendor/*.md')),
         ('share/' + package_name + '/models/gesture',
             glob('models/gesture/*')),
     ],
