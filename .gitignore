@@ -30,3 +30,6 @@ demo_recordings/
 *.task
 *.onnx
 *.tflite
+
+# --- 내부 디자인 문서 / 회고 (GitHub 비공개) ---
+docs/

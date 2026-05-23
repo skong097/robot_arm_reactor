@@ -186,11 +186,6 @@ omx_reactor/
 ├── README.md                      # 본 파일
 ├── requirements.txt
 ├── LICENSE                        # Apache-2.0
-├── docs/
-│   ├── daily/                     # 일일 회고
-│   └── superpowers/
-│       ├── specs/                 # 디자인 스펙
-│       └── plans/                 # 구현 plan (TDD)
 ├── scripts/
 │   ├── run_demo.sh                # 단일 터미널 launch
 │   └── stop_demo.sh               # 잔존 청소 + 카메라 release
@@ -232,14 +227,6 @@ cd src/omx_reactor && python3 -m pytest test/ -v
 | session_tracker | 8 | new_track / track_gone / grace |
 | trajectories | 73 | joint name / 시간 단조 / ±1.2rad 안전 / velocity ≤2.5rad/s |
 | gesture_detection | 21 | visibility cooldown / classify / wave |
-
-### 디자인 / 구현 문서
-
-| 단계 | 위치 |
-|---|---|
-| Brainstorming 디자인 스펙 | [docs/superpowers/specs/2026-05-23-omx-reactor-design.md](docs/superpowers/specs/2026-05-23-omx-reactor-design.md) |
-| P0 구현 plan (14 task TDD) | [docs/superpowers/plans/2026-05-23-omx-reactor-p0.md](docs/superpowers/plans/2026-05-23-omx-reactor-p0.md) |
-| 일일 회고 | [docs/daily/](docs/daily/) |
 
 ## Roadmap / Status
 
