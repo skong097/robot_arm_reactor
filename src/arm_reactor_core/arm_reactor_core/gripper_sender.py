@@ -27,10 +27,13 @@ class GripperSender:
 
     def send(self, position: float, on_finish: Callable[[], None]) -> bool:
         if not self._client.server_is_ready():
-            self._node.get_logger().warn(
-                f'gripper action server not ready ({self._client._action_name}) — skip send')
-            on_finish()
-            return False
+            # controller spawn 이 늦은 경우 — 2s 대기 후 재시도
+            if not self._client.wait_for_server(timeout_sec=2.0):
+                self._node.get_logger().warn(
+                    f'gripper action server still not ready after 2s — skip send '
+                    f'({self._client._action_name})')
+                on_finish()
+                return False
         self._on_finish = on_finish
         goal = GripperCommand.Goal()
         goal.command.position = float(position)
