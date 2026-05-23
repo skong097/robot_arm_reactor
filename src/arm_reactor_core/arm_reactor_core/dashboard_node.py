@@ -23,8 +23,9 @@ import rclpy
 from ament_index_python.packages import get_package_share_directory
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, DurabilityPolicy, ReliabilityPolicy
 from std_msgs.msg import String
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, JointState
 from cv_bridge import CvBridge
 import cv2
 
@@ -72,8 +73,14 @@ class DashboardNode(Node):
         super().__init__('omx_dashboard_node')
         self.declare_parameter('http_port', 8800)
         self.declare_parameter('engagement_score_alpha', 0.1)
+        self.declare_parameter('arm_view_mode', 'mjpeg')   # 'mjpeg' | 'urdf' (sub-spec c)
         self._port = int(self.get_parameter('http_port').value)
         self._score_alpha = float(self.get_parameter('engagement_score_alpha').value)
+        self._arm_view_mode = str(self.get_parameter('arm_view_mode').value)
+
+        # sub-spec c — URDF + joint_state 캐시 (arm_view_mode='urdf' 일 때만 활용)
+        self._urdf_xml: str | None = None
+        self._latest_joint_state: dict | None = None
 
         # doby opserver 와 동일 state — engaging snapshot 직접 채움
         self._emotion_state: dict | None = None
@@ -112,14 +119,33 @@ class DashboardNode(Node):
         self.create_subscription(String, '/omx_reactor/state', self._on_reactor, 10)
         self.create_subscription(Image, '/external_cam/image', self._on_cam_image, 1)
 
+        # sub-spec c — /robot_description (transient_local QoS, latched) + /joint_states (urdf 모드만)
+        _rd_qos = QoSProfile(depth=1,
+                             durability=DurabilityPolicy.TRANSIENT_LOCAL,
+                             reliability=ReliabilityPolicy.RELIABLE)
+        self.create_subscription(String, '/robot_description', self._on_robot_description, _rd_qos)
+        if self._arm_view_mode == 'urdf':
+            self.create_subscription(JointState, '/joint_states', self._on_joint_state, 10)
+
         self._app = self._build_app()
         self._thread = threading.Thread(target=self._serve, daemon=True)
         self._thread.start()
         self._loop_ready.wait(timeout=5.0)
         self.get_logger().info(
             f'omx_dashboard_node ready — http://localhost:{self._port}/  '
-            f'(WS: /ws/stream + /ws/v1/engaging)'
+            f'(WS: /ws/stream + /ws/v1/engaging), arm_view_mode={self._arm_view_mode}'
         )
+
+    # ── sub-spec c callbacks ───────────────────────────
+    def _on_robot_description(self, msg: String):
+        self._urdf_xml = msg.data
+        self.get_logger().info(f'robot_description cached ({len(self._urdf_xml)} bytes)')
+
+    def _on_joint_state(self, msg: JointState):
+        self._latest_joint_state = {
+            't': msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9,
+            'positions': {n: float(p) for n, p in zip(msg.name, msg.position)},
+        }
 
     # ── FastAPI ──────────────────────────────────────────
     def _build_app(self) -> FastAPI:
