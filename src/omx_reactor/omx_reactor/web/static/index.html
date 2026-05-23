@@ -99,6 +99,22 @@
 
   </main>
 
+  <!-- omx_reactor — vendored engaging-analytics.js 의 init() 이 window.store.get('mode')==='engaging'
+       일 때만 ws.open() 호출. omx 환경엔 store 없어 ws 연결 안 됨 → 점/추이/라포 갱신 X.
+       mode='engaging' 항상 반환하는 minimal store mock 으로 ws 자동 연결 강제. -->
+  <script>
+    window.store = {
+      _handlers: {},
+      on: function (event, cb) {
+        (this._handlers[event] = this._handlers[event] || []).push(cb);
+        if (event === 'mode') cb({ current: 'engaging' });
+      },
+      get: function (key) {
+        return key === 'mode' ? { current: 'engaging' } : null;
+      },
+    };
+  </script>
+
   <!-- vendored doby web component + analytics + omx adapter -->
   <script src="/static/engagement-timeline.js"></script>
   <script src="/static/engaging-analytics.js"></script>
