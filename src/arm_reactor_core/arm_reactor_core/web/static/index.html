@@ -100,13 +100,21 @@
     <!-- 오른쪽 column — OMX Gazebo view + 모션 이벤트 -->
     <section class="card omx-right">
       <h3>OMX 모션 <span class="motion-tag" id="ea-current-motion">-</span></h3>
-      <div class="omx-gazebo-controls">
-        <label for="gazebo-zoom" class="muted">zoom</label>
-        <input type="range" id="gazebo-zoom" min="0.5" max="3.0" step="0.1" value="1.0">
-        <span id="gazebo-zoom-label">1.0x</span>
+
+      <!-- sub-spec c — arm view dual-mode (default both hidden, app.js 가 /api/config 보고 분기 show) -->
+      <div id="view-mjpeg" hidden>
+        <div class="omx-gazebo-controls">
+          <label for="gazebo-zoom" class="muted">zoom</label>
+          <input type="range" id="gazebo-zoom" min="0.5" max="3.0" step="0.1" value="1.0">
+          <span id="gazebo-zoom-label">1.0x</span>
+        </div>
+        <div class="omx-gazebo-view">
+          <img id="gazebo-view-img" src="/api/gazebo_view.mjpg" alt="OMX Gazebo view" />
+        </div>
       </div>
-      <div class="omx-gazebo-view">
-        <img id="gazebo-view-img" src="/api/gazebo_view.mjpg" alt="OMX Gazebo view" />
+
+      <div id="view-urdf" hidden>
+        <canvas id="urdf-canvas"></canvas>
       </div>
 
       <h4 class="card__subtitle">모션 이벤트 (현재 상태 + 로봇 모션 ID)</h4>
@@ -137,6 +145,14 @@
   <script src="/static/engagement-timeline.js"></script>
   <script src="/static/engaging-analytics.js"></script>
   <script src="/static/app.js"></script>
+
+  <!-- sub-spec c — three.js + urdf-loader vendored (UMD, OpenArm 양손 시각화) -->
+  <script src="/static/vendor/three.min.js"></script>
+  <script src="/static/vendor/STLLoader.js"></script>
+  <script src="/static/vendor/ColladaLoader.js"></script>
+  <script src="/static/vendor/OrbitControls.js"></script>
+  <script src="/static/vendor/URDFLoader.js"></script>
+  <script src="/static/urdf_view.js"></script>
 
 </body>
 </html>
