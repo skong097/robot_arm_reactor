@@ -99,3 +99,21 @@
   }
   connect();
 })();
+
+/* sub-spec c — arm view dual-mode 분기.
+ * /api/config 의 arm_view_mode 보고 #view-mjpeg / #view-urdf 중 하나 show.
+ * fetch 실패 시 mjpeg fallback (default).
+ */
+(async function () {
+  let mode = 'mjpeg';
+  try {
+    const cfg = await fetch('/api/config').then(r => r.json());
+    if (cfg && cfg.arm_view_mode) mode = cfg.arm_view_mode;
+  } catch (e) {
+    console.warn('[app] /api/config fetch failed, fallback to mjpeg', e);
+  }
+  const showId = (mode === 'urdf') ? 'view-urdf' : 'view-mjpeg';
+  const el = document.getElementById(showId);
+  if (el) el.hidden = false;
+  console.log('[app] arm_view_mode =', mode, '→ show #' + showId);
+})();
