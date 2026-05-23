@@ -17,9 +17,9 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Stephen Kong (gjkong)',
-    maintainer_email='kong@pinklab.art',
-    description='OMX reactor demo',
+    maintainer='gjkong',
+    maintainer_email='skong097@gmail.com',
+    description='OMX reactor - multimodal customer signal to expressive motion (Gazebo demo)',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
