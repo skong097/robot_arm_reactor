@@ -17,8 +17,11 @@
   function setStatus(p) {
     if (!p) return;
     if (p.current_motion !== undefined) {
+      const m = p.current_motion || '-';
       const el = $('current_motion');
-      if (el) el.textContent = p.current_motion || '-';
+      if (el) el.textContent = m;
+      const tag = $('ea-current-motion');
+      if (tag) tag.textContent = m;
     }
     if (p.queued_motion !== undefined) {
       const el = $('queued_motion');

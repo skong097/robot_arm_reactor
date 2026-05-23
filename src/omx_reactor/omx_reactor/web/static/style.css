@@ -77,6 +77,19 @@ main.omx-main > section.engaging-analytics { grid-column: auto !important; }
   object-fit: contain;
   display: block;
 }
+.omx-right h3 .motion-tag {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 2px 8px;
+  background: var(--bg-quaternary);
+  border: 1px solid var(--cyan-accent);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--cyan-accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 /* 오른쪽 카드 stretch 된 height 안에서 motion-events 가 남은 공간 채움 */
 .omx-right {
   display: flex;
