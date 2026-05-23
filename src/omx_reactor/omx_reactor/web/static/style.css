@@ -42,7 +42,7 @@ main.omx-main {
   padding: var(--space-4);
   max-width: 1600px;
   margin: 0 auto;
-  align-items: start;
+  align-items: stretch;   /* 두 카드 height 동일 (왼쪽 긴 카드 기준) */
 }
 main.omx-main > section.card { min-width: 0; }   /* grid item overflow 방어 */
 /* vendored components.css 의 .engaging-analytics { grid-column: 1 / -1 } 무효화 —
@@ -76,6 +76,16 @@ main.omx-main > section.engaging-analytics { grid-column: auto !important; }
   height: 100%;
   object-fit: contain;
   display: block;
+}
+/* 오른쪽 카드 stretch 된 height 안에서 motion-events 가 남은 공간 채움 */
+.omx-right {
+  display: flex;
+  flex-direction: column;
+}
+.omx-right .omx-motion-list {
+  flex: 1 1 auto;
+  max-height: none;     /* 220px 제한 해제 — 카드 stretch 된 만큼 늘림 */
+  min-height: 100px;
 }
 
 /* 이벤트 로그 — omx_reactor 고유 */
