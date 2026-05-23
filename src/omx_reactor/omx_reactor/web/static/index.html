@@ -21,13 +21,12 @@
 
   <main class="omx-main">
 
-    <!-- 모객 분석 — doby_controller modes.html (engaging 모드 expand 섹션) 그대로 포팅.
-         hidden 속성 제거 — omx_reactor 는 mode 분기 없이 항상 표시.
-         "강제 발화" 폼은 P0 에 dialog endpoint 없음 — 클릭 시 NET 에러 (UX 동일성 우선). -->
+    <!-- 감정 분석 — doby_controller modes.html (engaging 섹션) 포팅.
+         hidden 제거 — omx_reactor 는 mode 분기 없이 항상 표시.
+         손님 라벨 / 미니게임 결과 / 강제 발화 / 최근 이벤트 섹션은 omx_reactor 컨텍스트 무관해 제거. -->
     <section class="card engaging-analytics" id="engaging-analytics">
-      <h3>모객 분석 (V·A · rapport · minigame)
-        <span class="muted" id="ea-source">—</span>
-        <span class="ea-customer-label unknown" id="ea-customer">— 손님 대기 중</span></h3>
+      <h3>감정 분석
+        <span class="muted" id="ea-source">—</span></h3>
       <div class="ea-grid">
         <div class="ea-meta">
           <div class="ea-row">
@@ -96,54 +95,13 @@
 
       <h4 class="card__subtitle">시계열 추이 (최근 1분)</h4>
       <engagement-timeline id="ea-timeline"></engagement-timeline>
-
-      <h4 class="card__subtitle">미니게임 결과</h4>
-      <div id="ea-mg-recent">
-        <div class="muted">(아직 결과 없음)</div>
-      </div>
-
-      <h4 class="card__subtitle">강제 발화 (현재 모드 발화 큐 선점)</h4>
-      <div class="form-row">
-        <input type="text" class="form-input form-input--grow"
-               id="ea-utter-text" placeholder="안녕하세요!" maxlength="200">
-        <button class="btn btn--primary" id="ea-utter-send">발송</button>
-      </div>
-      <div class="form-row">
-        <label class="form-label" for="ea-utter-persona">페르소나</label>
-        <select class="form-select" id="ea-utter-persona">
-          <option value="">(persona 자동)</option>
-          <option value="casual_browser">casual_browser</option>
-          <option value="friendly_child">friendly_child</option>
-          <option value="professional_adult">professional_adult</option>
-        </select>
-        <label class="form-label" for="ea-utter-face">표정</label>
-        <select class="form-select" id="ea-utter-face">
-          <option value="">— 변경 없음 —</option>
-          <option value="basic">basic</option>
-          <option value="hello">hello</option>
-          <option value="happy">happy</option>
-          <option value="fun">fun</option>
-          <option value="interest">interest</option>
-          <option value="bored">bored</option>
-          <option value="sad">sad</option>
-          <option value="angry">angry</option>
-        </select>
-        <button class="btn btn--ghost" id="ea-expression-apply">표정만 적용</button>
-      </div>
-    </section>
-
-    <!-- omx_reactor 고유 — 최근 이벤트 로그 (motion / rapport) -->
-    <section class="card omx-events">
-      <h3>최근 이벤트</h3>
-      <ul id="events"></ul>
     </section>
 
   </main>
 
-  <!-- vendored doby web component + analytics — classic script (모듈 X) -->
+  <!-- vendored doby web component + analytics + omx adapter -->
   <script src="/static/engagement-timeline.js"></script>
   <script src="/static/engaging-analytics.js"></script>
-  <!-- omx_reactor adapter — WS payload → engaging-analytics shape 변환 -->
   <script src="/static/app.js"></script>
 </body>
 </html>
