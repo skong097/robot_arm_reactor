@@ -1,47 +1,64 @@
-:root {
-  --bg: #0f1115;
-  --panel: #1a1d24;
-  --fg: #d8dde7;
-  --accent: #62a9ff;
-  --warn: #ff8b62;
-  --muted: #6b7280;
+/* style.css — omx_reactor 고유 layout
+ *
+ * 디자인 토큰 + 카드/폼/engaging-analytics 스타일은 components.css (vendored)
+ * 에서 가져온다. 본 파일은 omx_reactor 의 header / main 그리드 / 이벤트 로그
+ * 같은 omx 전용 chrome 만 정의.
+ *
+ * 폐기: V·A 4분면 캔버스 관련 모든 스타일 (canvas / Q1~Q4 라벨 등).
+ *       doby 의 .circumplex SVG 가 본 역할을 대체한다.
+ */
+
+.omx-header {
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
-* { box-sizing: border-box; }
-body {
-  margin: 0; padding: 0;
-  background: var(--bg); color: var(--fg);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+.omx-header h1 {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--pink-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
-header {
-  padding: 14px 22px;
-  background: var(--panel);
-  border-bottom: 1px solid #2a2e38;
+.status-bar {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
 }
-header h1 { margin: 0 0 8px 0; font-size: 18px; color: var(--accent); }
-.status-bar { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
-.status-bar .sep { color: var(--muted); }
-main {
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  grid-template-rows: 380px auto;
-  gap: 14px; padding: 14px;
+.status-bar b { color: var(--text-primary); }
+.status-bar .sep { color: var(--text-muted); }
+
+.omx-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  max-width: 1100px;
+  margin: 0 auto;
 }
-section {
-  background: var(--panel); border-radius: 6px;
-  padding: 12px;
+
+/* 이벤트 로그 — omx_reactor 고유 */
+.omx-events {
+  grid-column: 1 / -1;
 }
-section h2 {
-  margin: 0 0 8px 0; font-size: 13px;
-  color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
-}
-canvas { background: #0a0c10; border-radius: 4px; display: block; }
 #events {
-  list-style: none; margin: 0; padding: 0;
-  max-height: 200px; overflow-y: auto; font-size: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  font-size: var(--fs-xs);
+  font-family: var(--font-mono);
 }
 #events li {
-  padding: 4px 0; border-bottom: 1px dashed #2a2e38;
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--border);
 }
-#events li.motion { color: var(--accent); }
-#events li.rapport { color: var(--fg); }
-section:nth-child(3) { grid-column: 1 / -1; }
+#events li.motion { color: var(--pink-soft); }
+#events li.rapport { color: var(--text-secondary); }

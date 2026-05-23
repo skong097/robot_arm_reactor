@@ -26,6 +26,15 @@ cd ~/physical-ai-repo-3 && git rev-parse HEAD
 - 필요한 동작 변경은 omx_reactor 측 wrapper 또는 launch parameter 로 해결.
 - 예외 (필요 시 본 README 에 기록): geva_node 의 `track_id` 발행 검증 미충족 시 최소 patch — 추후 doby_controller 원본 PR 권장.
 - 예외 1 (Task 2 + Task 3): `dobi_npc_msgs/CMakeLists.txt` 의 generate_interfaces 를 EmotionState/RapportEvent/PersonTrack/PersonTrackArray 4개만 등록하도록 축소. 다른 msg 는 omx_reactor 에서 사용 X. (Task 3 진행 중 geva_node 가 PersonTrackArray 의존이 확인되어 PersonTrack + PersonTrackArray 를 0 수정 카피로 추가함.)
+- 예외 2 (2026-05-24 — engaging-analytics UI 포팅): doby_controller `src/moca_opserver/static/` 의 4 자산을 omx_reactor 의 `src/omx_reactor/omx_reactor/web/static/` 으로 0 수정 카피.
+  - `js/engaging-analytics.js` → `engaging-analytics.js` (264 lines, V·A circumplex + rapport + minigame card 렌더러)
+  - `components/engagement-timeline.js` → `engagement-timeline.js` (114 lines, V/A/score 3 라인 SVG web component, 2026-05-23 발췌분)
+  - `css/tokens.css` → `tokens.css` (디자인 토큰 — `--bg-*`, `--pink-*`, `--success/--warning/--danger` 등 vendored 셀렉터 의존)
+  - `css/components.css` → `components.css` (발췌 — `.card / .card__subtitle / .form-* / .btn* / .engaging-analytics / .ea-* / .circumplex / .engagement-timeline` 셀렉터만 카피; doby 원본 line 75-148, 538-619, 667-673, 897-1046, 1068-1115)
+  - `pages/modes.html` 의 `<section class="card engaging-analytics" id="engaging-analytics">` (doby 원본 line 166-272) → `index.html` 안에 verbatim 임베드. doby 원본은 mode=engaging 일 때만 표시 (`hidden` 속성) — omx_reactor 는 mode 분기 없어 `hidden` 속성 제거. 그 외 HTML 0 수정.
+  - 폐기: omx_reactor 의 임의 자산 `va_quadrant.js` (4분면 캔버스 + DANCE/FREEZE/CONSOLE/IDLE 라벨 — 사용자 동의 없이 만든 것) `git rm` + `index.html` 의 임의 4분면 섹션 제거 + `style.css` 의 canvas 관련 부분 제거.
+  - adapter (omx_reactor `app.js` 재작성): `/ws/stream` payload (snapshot / emotion / rapport / reactor) 를 vendored engaging-analytics.js 가 기대하는 doby shape `{ts, emotion: {latest, trajectory}, rapport: {counters, recent}, minigame, mode}` 로 변환. engaging-analytics.js 가 `/ws/v1/engaging` (doby endpoint, omx 에는 없음) 으로 WS 를 여는데 — `window.WebSocket` 을 hijack 해서 해당 URL 만 FakeWS 로 가로채고 변환된 payload 를 inject. engaging-analytics.js 코드 자체는 0 수정.
+  - 제한: engaging-analytics.js 의 "강제 발화" 폼 click handler 는 `window.api`/`/dialog/utter` 의존 — omx_reactor 에 endpoint 없어 NET 에러로 떨어짐 (HTML 폼만 보임, 기능 X). minigame/group_id 도 omx 데이터에 없어 항상 빈/Solo 로 표시. mode 분기는 `window.store` 없을 시 init 가 건너뜀 → 섹션 always visible.
 
 ### Task 3 검증 — geva_node track_id 발행 (spec §12 리스크)
 

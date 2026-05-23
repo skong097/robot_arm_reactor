@@ -3,42 +3,147 @@
 <head>
   <meta charset="utf-8">
   <title>OMX Reactor — Live Demo</title>
+  <link rel="stylesheet" href="/static/tokens.css">
+  <link rel="stylesheet" href="/static/components.css">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <header>
+  <header class="omx-header">
     <h1>OMX Reactor</h1>
     <div class="status-bar">
-      <span>V: <b id="v">-</b></span>
-      <span>A: <b id="a">-</b></span>
-      <span>conf: <b id="conf">-</b></span>
-      <span>source: <b id="source">-</b></span>
-      <span class="sep">|</span>
       <span>모션: <b id="current_motion">-</b></span>
       <span>다음: <b id="queued_motion">-</b></span>
+      <span class="sep">|</span>
       <span>track: <b id="track">-</b></span>
+      <span>source: <b id="source">-</b></span>
     </div>
   </header>
 
-  <main>
-    <section>
-      <h2>V·A 4분면 (Russell circumplex)</h2>
-      <canvas id="va_canvas" width="360" height="360"></canvas>
+  <main class="omx-main">
+
+    <!-- 모객 분석 — doby_controller modes.html (engaging 모드 expand 섹션) 그대로 포팅.
+         hidden 속성 제거 — omx_reactor 는 mode 분기 없이 항상 표시.
+         "강제 발화" 폼은 P0 에 dialog endpoint 없음 — 클릭 시 NET 에러 (UX 동일성 우선). -->
+    <section class="card engaging-analytics" id="engaging-analytics">
+      <h3>모객 분석 (V·A · rapport · minigame)
+        <span class="muted" id="ea-source">—</span>
+        <span class="ea-customer-label unknown" id="ea-customer">— 손님 대기 중</span></h3>
+      <div class="ea-grid">
+        <div class="ea-meta">
+          <div class="ea-row">
+            <span class="label">valence</span>
+            <span class="ea-big v-mid" id="ea-v">—</span>
+          </div>
+          <div class="ea-row">
+            <span class="label">arousal</span>
+            <span class="ea-big v-mid" id="ea-a">—</span>
+          </div>
+          <div class="ea-row">
+            <span class="label">confidence</span>
+            <span id="ea-conf">—</span>
+          </div>
+          <div class="ea-conf-bar"><span id="ea-conf-bar" style="width:0%"></span></div>
+          <div class="ea-row">
+            <span class="label">flags</span>
+            <span id="ea-flags" style="font-size:var(--fs-xs)">—</span>
+          </div>
+        </div>
+        <svg class="circumplex" viewBox="-110 -110 220 220" id="ea-circumplex">
+          <rect class="abort-zone" x="-100" y="-100" width="50" height="60"></rect>
+          <line class="axis" x1="-100" y1="0" x2="100" y2="0"></line>
+          <line class="axis" x1="0" y1="-100" x2="0" y2="100"></line>
+          <line class="grid" x1="-100" y1="-50" x2="100" y2="-50"></line>
+          <line class="grid" x1="-100" y1="50" x2="100" y2="50"></line>
+          <line class="grid" x1="-50" y1="-100" x2="-50" y2="100"></line>
+          <line class="grid" x1="50" y1="-100" x2="50" y2="100"></line>
+          <rect x="-100" y="-100" width="200" height="200" fill="none"
+                stroke="rgba(255,102,179,0.18)" stroke-width="0.5"></rect>
+          <text class="quad-label" x="92" y="-3" text-anchor="end">V+</text>
+          <text class="quad-label" x="-92" y="-3" text-anchor="start">V-</text>
+          <text class="quad-label" x="3" y="-92" text-anchor="start">A+</text>
+          <text class="quad-label" x="3" y="98" text-anchor="start">A-</text>
+          <text class="quad-label" x="-90" y="-85">angry/abort</text>
+          <text class="quad-label" x="55" y="-85">excited</text>
+          <text class="quad-label" x="-90" y="92">sad/bored</text>
+          <text class="quad-label" x="55" y="92">calm/happy</text>
+          <g id="ea-traj"></g>
+          <circle class="cur-pt" id="ea-cur" cx="0" cy="0" r="0"></circle>
+        </svg>
+      </div>
+
+      <h4 class="card__subtitle">라포 이벤트</h4>
+      <div class="ea-rap-counters">
+        <div class="ea-rap-counter up">
+          <div class="num" id="ea-rap-up">0</div>
+          <div class="lbl">engagement_up</div>
+        </div>
+        <div class="ea-rap-counter down">
+          <div class="num" id="ea-rap-down">0</div>
+          <div class="lbl">engagement_down</div>
+        </div>
+        <div class="ea-rap-counter abrt">
+          <div class="num" id="ea-rap-abort">0</div>
+          <div class="lbl">abort_trigger</div>
+        </div>
+        <div class="ea-rap-counter neut">
+          <div class="num" id="ea-rap-neut">0</div>
+          <div class="lbl">neutral_continue</div>
+        </div>
+      </div>
+      <div class="ea-rap-recent" id="ea-rap-recent">
+        <div class="ev-neut">(아직 이벤트 없음)</div>
+      </div>
+
+      <h4 class="card__subtitle">시계열 추이 (최근 1분)</h4>
+      <engagement-timeline id="ea-timeline"></engagement-timeline>
+
+      <h4 class="card__subtitle">미니게임 결과</h4>
+      <div id="ea-mg-recent">
+        <div class="muted">(아직 결과 없음)</div>
+      </div>
+
+      <h4 class="card__subtitle">강제 발화 (현재 모드 발화 큐 선점)</h4>
+      <div class="form-row">
+        <input type="text" class="form-input form-input--grow"
+               id="ea-utter-text" placeholder="안녕하세요!" maxlength="200">
+        <button class="btn btn--primary" id="ea-utter-send">발송</button>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="ea-utter-persona">페르소나</label>
+        <select class="form-select" id="ea-utter-persona">
+          <option value="">(persona 자동)</option>
+          <option value="casual_browser">casual_browser</option>
+          <option value="friendly_child">friendly_child</option>
+          <option value="professional_adult">professional_adult</option>
+        </select>
+        <label class="form-label" for="ea-utter-face">표정</label>
+        <select class="form-select" id="ea-utter-face">
+          <option value="">— 변경 없음 —</option>
+          <option value="basic">basic</option>
+          <option value="hello">hello</option>
+          <option value="happy">happy</option>
+          <option value="fun">fun</option>
+          <option value="interest">interest</option>
+          <option value="bored">bored</option>
+          <option value="sad">sad</option>
+          <option value="angry">angry</option>
+        </select>
+        <button class="btn btn--ghost" id="ea-expression-apply">표정만 적용</button>
+      </div>
     </section>
 
-    <section>
-      <h2>engagement-timeline (60s sliding)</h2>
-      <engagement-timeline id="timeline"></engagement-timeline>
-    </section>
-
-    <section>
-      <h2>최근 이벤트</h2>
+    <!-- omx_reactor 고유 — 최근 이벤트 로그 (motion / rapport) -->
+    <section class="card omx-events">
+      <h3>최근 이벤트</h3>
       <ul id="events"></ul>
     </section>
+
   </main>
 
-  <script type="module" src="/static/engagement-timeline.js"></script>
-  <script type="module" src="/static/va_quadrant.js"></script>
-  <script type="module" src="/static/app.js"></script>
+  <!-- vendored doby web component + analytics — classic script (모듈 X) -->
+  <script src="/static/engagement-timeline.js"></script>
+  <script src="/static/engaging-analytics.js"></script>
+  <!-- omx_reactor adapter — WS payload → engaging-analytics shape 변환 -->
+  <script src="/static/app.js"></script>
 </body>
 </html>
