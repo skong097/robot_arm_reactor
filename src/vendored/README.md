@@ -48,6 +48,47 @@ cd ~/physical-ai-repo-3 && git rev-parse HEAD
 - Stale guard: `_last_tracks_ts` 가 `_tracks_stale_timeout` 초과면 `msg.track_id = -1` (line 272, 293).
 - 정수값 (PersonTrack.track_id 는 BoT-SORT tracker int) 이 set 되므로 patch 불필요.
 
+## 외부 모델 부트스트랩 (fresh clone 시 필요)
+
+`dobi_npc_emotion` 의 `geva_node` 가 사용하는 mediapipe 모델 파일은 `.gitignore` 의
+`*.task` / `*.tflite` / `*.onnx` 룰로 git tracking 에서 제외됩니다 (크기/라이센스 정책).
+fresh clone 시 다음 절차로 모델을 부트스트랩하세요.
+
+### 옵션 A — 인터넷 다운로드 (권장)
+
+```bash
+WS=$(pwd)   # ~/omx_reactor 가정
+MODELS_DIR="$WS/src/vendored/dobi_npc_emotion/models"
+mkdir -p "$MODELS_DIR"
+# mediapipe FaceLandmarker (얼굴 랜드마크 + Blendshapes)
+curl -fsSL https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task \
+  -o "$MODELS_DIR/face_landmarker.task"
+# mediapipe EfficientDet-Lite0 (person detection, gefa 후속용)
+curl -fsSL https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/latest/efficientdet_lite0.tflite \
+  -o "$MODELS_DIR/efficientdet_lite0.tflite"
+ls -lh "$MODELS_DIR"
+```
+Expected: 두 파일 다운로드 (face_landmarker.task ~3.7MB, efficientdet_lite0.tflite ~4.4MB).
+
+### 옵션 B — doby_controller 로컬 카피 (개발자 본인)
+
+doby_controller workspace 가 이미 있는 경우:
+```bash
+cp /home/gjkong/physical-ai-repo-3/src/controller/doby_controller/src/dobi_npc/dobi_npc_emotion/models/* \
+   $WS/src/vendored/dobi_npc_emotion/models/
+```
+
+### 검증
+
+```bash
+cd $WS && source install/setup.bash
+export ROS_DOMAIN_ID=99 ROS_LOCALHOST_ONLY=1
+timeout 12 ros2 run dobi_npc_emotion geva_node 2>&1 | grep -E "FaceLandmarker|모델|Error"
+```
+Expected: `FaceLandmarker 초기화 완료` 같은 로그. 에러 메시지 있으면 모델 path 또는 다운로드 재확인.
+
+> 모델 부트스트랩 후 colcon build 재실행은 불필요 (symlink-install 인 경우 — 모델은 share/ 로 install_data_files 통해 자동 install).
+
 ## 추후 병합 절차
 
 omx_reactor 가 doby_controller `src/dobi_npc/dobi_npc_arm/` 로 병합되는 시점:
