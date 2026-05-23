@@ -176,6 +176,27 @@ class DashboardNode(Node):
                 return Response('robot_description not yet received', status_code=503)
             return Response(self._urdf_xml, media_type='application/xml')
 
+        @app.get('/api/meshes/{pkg}/{path:path}')
+        async def mesh(pkg: str, path: str):
+            """ros2 share 의 mesh 파일 정적 서빙.
+
+            urdf-loader 의 'package://<pkg>/...' resolver 가 호출.
+            path traversal 방지 — normpath 후 share prefix 검증 (symlink 무관, '..' 만 정규화).
+            """
+            import os.path
+            try:
+                share = get_package_share_directory(pkg)
+            except Exception:
+                return Response(f'package {pkg!r} not found', status_code=404)
+            # share root 안으로 한정 (colcon --symlink-install 시 share/meshes/ 가 src 로 symlink — 정상)
+            full_norm = os.path.normpath(os.path.join(share, path))
+            if not (full_norm == share or full_norm.startswith(share + os.sep)):
+                return Response('path traversal denied', status_code=403)
+            p = Path(full_norm)
+            if not p.exists() or not p.is_file():
+                return Response('not found', status_code=404)
+            return FileResponse(str(p))
+
         @app.websocket('/ws/v1/engaging')
         async def ws_engaging(ws: WebSocket):
             """engaging-analytics 라이브 stream — 5Hz throttle.
