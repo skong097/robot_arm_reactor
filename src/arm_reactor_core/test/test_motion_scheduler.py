@@ -1,12 +1,14 @@
 import pytest
 
-from omx_reactor.motions import Motion
-from omx_reactor.motion_scheduler import MotionScheduler, SchedulerAction
+from arm_reactor_core.dispatch import Dispatch
+from arm_reactor_core.motion import Motion
+from arm_reactor_core.motion_scheduler import MotionScheduler, SchedulerAction
 
 
 def _m(id_: str, priority: int = 10, cooldown: float = 5.0) -> Motion:
     return Motion(id=id_, trigger=lambda c: True, priority=priority,
-                  cooldown_sec=cooldown, trajectory=lambda: None)
+                  cooldown_sec=cooldown,
+                  trajectory=lambda: [Dispatch('/test', None, 'trajectory')])
 
 
 def test_submit_when_idle_starts():

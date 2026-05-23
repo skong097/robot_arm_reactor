@@ -1,8 +1,9 @@
 import pytest
 
-from omx_reactor.context import Context, EmotionSignal
-from omx_reactor.motions import Motion
-from omx_reactor.motion_mapper import select_motion
+from arm_reactor_core.context import Context, EmotionSignal
+from arm_reactor_core.dispatch import Dispatch
+from arm_reactor_core.motion import Motion
+from arm_reactor_core.motion_mapper import select_motion
 
 
 def _ctx(quadrant: str | None, in_db: bool = False,
@@ -13,7 +14,8 @@ def _ctx(quadrant: str | None, in_db: bool = False,
 
 
 def _dummy_traj():
-    return None  # mapper 는 trajectory 안 부름
+    # mapper 는 trajectory 안 부르지만 Motion 시그니처상 list[Dispatch] 반환 필요
+    return [Dispatch(action_name='/test', msg=None, kind='trajectory')]
 
 
 M_DANCE   = Motion('DANCE',   trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q1'),  priority=10,  cooldown_sec=5.0, trajectory=_dummy_traj)
