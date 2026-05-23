@@ -19,14 +19,18 @@ def generate_launch_description():
         ),
     )
 
-    # 외부 시점 카메라 — Gazebo Sim 시작 후 충분 delay 후 spawn
+    # 외부 시점 카메라 — Gazebo Sim 시작 후 충분 delay 후 spawn.
+    # ros_gz_sim create 가 SDF 의 <pose> 무시 — -x/-y/-z/-R/-P/-Y 명시 강제.
+    # (1.5, 0, 0.4) 정면 약간 위에서 OMX 향함 (yaw=π).
     spawn_cam = TimerAction(
         period=8.0,
         actions=[
             ExecuteProcess(
                 cmd=['ros2', 'run', 'ros_gz_sim', 'create',
                      '-name', 'external_cam',
-                     '-file', sdf_path],
+                     '-file', sdf_path,
+                     '-x', '1.5', '-y', '0.0', '-z', '0.4',
+                     '-R', '0.0', '-P', '0.15', '-Y', '3.14159'],
                 output='screen',
             ),
         ],
