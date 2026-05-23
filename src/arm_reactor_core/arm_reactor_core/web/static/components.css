@@ -328,3 +328,17 @@ engagement-timeline {
   font-size: 10px;
   font-family: var(--font-mono);
 }
+
+/* ─── sub-spec c — arm view dual-mode (MJPEG | URDF) ─────────────── */
+#view-mjpeg,
+#view-urdf {
+  width: 100%;
+}
+
+#urdf-canvas {
+  width: 100%;
+  height: 360px;
+  display: block;
+  background: #303030;
+  border-radius: 4px;
+}
