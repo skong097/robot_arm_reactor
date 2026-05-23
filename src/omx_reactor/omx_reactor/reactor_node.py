@@ -34,7 +34,11 @@ class ReactorNode(Node):
 
         self._session = SessionTracker(bye_grace_sec=self._bye_grace)
         self._scheduler = MotionScheduler(cooldown_default_sec=cd)
-        self._sender = OmxTrajectorySender(self)
+        # 두 sender — trajectory.joint_names[0] 으로 dispatch 분기
+        self._arm_sender = OmxTrajectorySender(
+            self, action_name='/arm_controller/follow_joint_trajectory')
+        self._gripper_sender = OmxTrajectorySender(
+            self, action_name='/gripper_controller/follow_joint_trajectory')
 
         self._latest_v: float = 0.0
         self._latest_a: float = 0.0
@@ -111,7 +115,9 @@ class ReactorNode(Node):
             if action == SchedulerAction.START:
                 self._dispatch(chosen)
             elif action == SchedulerAction.INTERRUPT:
-                self._sender.cancel_current()
+                # 두 sender 둘 다 cancel — 어느 게 활성인지 무관
+                self._arm_sender.cancel_current()
+                self._gripper_sender.cancel_current()
                 self._dispatch(chosen)
             # QUEUE / IGNORE 는 아무 것도 안 함
 
@@ -120,7 +126,11 @@ class ReactorNode(Node):
     def _dispatch(self, motion):
         self.get_logger().info(f'▶ Motion {motion.id} (priority={motion.priority})')
         traj = motion.trajectory()
-        self._sender.send(traj, on_finish=lambda: self._on_motion_finish())
+        # trajectory.joint_names[0] 으로 sender 결정 — gripper_* 시작 시 gripper sender
+        sender = (self._gripper_sender
+                  if traj.joint_names and traj.joint_names[0].startswith('gripper')
+                  else self._arm_sender)
+        sender.send(traj, on_finish=lambda: self._on_motion_finish())
 
     def _on_motion_finish(self):
         t_now = self._now_sec()

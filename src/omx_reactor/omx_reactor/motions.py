@@ -25,6 +25,8 @@ class Motion:
 from omx_reactor.trajectories import (
     traj_dance, traj_freeze, traj_console, traj_idle, traj_hello, traj_bye,
     traj_hand_out, traj_hands_up, traj_hands_up_wave,
+    traj_point_back, traj_nod, traj_cheer, traj_heart, traj_strong, traj_sad, traj_twinkle,
+    traj_gripper_open, traj_gripper_close,
 )
 
 MOTIONS: list[Motion] = [
@@ -51,17 +53,42 @@ MOTIONS: list[Motion] = [
            trigger=lambda c: c.session_event == 'track_gone',
            priority=100, cooldown_sec=0.0, trajectory=traj_bye),
 
-    # Gesture mimic (HELLO/BYE 보다 낮지만 분면 모션 interrupt)
+    # Gesture mimic (HELLO/BYE 보다 낮지만 분면 모션 interrupt) — priority 80~95
     Motion('HAND_OUT',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'hand_visible'),
            priority=80, cooldown_sec=5.0, trajectory=traj_hand_out),
+    Motion('TWINKLE',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'twinkle'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_twinkle),
     Motion('HANDS_UP',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up'),
            priority=85, cooldown_sec=5.0, trajectory=traj_hands_up),
     Motion('HANDS_UP_WAVE',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up_wave'),
            priority=90, cooldown_sec=5.0, trajectory=traj_hands_up_wave),
-
-    # P2+ 자리
-    # Motion('LEAN_TO_USER', ..., priority=50, ..., trajectory=traj_lean),
+    Motion('POINT_BACK',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'pointing_up'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_point_back),
+    Motion('NOD',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'thumb_up'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_nod),
+    Motion('SAD',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'thumb_down'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_sad),
+    Motion('CHEER',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'victory'),
+           priority=85, cooldown_sec=5.0, trajectory=traj_cheer),
+    Motion('HEART',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'ilove_you'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_heart),
+    Motion('STRONG',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'closed_fist'),
+           priority=82, cooldown_sec=5.0, trajectory=traj_strong),
+    # Gripper — 별 controller (reactor 가 trajectory.joint_names 으로 dispatch 분기)
+    Motion('GRIPPER_OPEN',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'gripper_open'),
+           priority=95, cooldown_sec=3.0, trajectory=traj_gripper_open),
+    Motion('GRIPPER_CLOSE',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'gripper_close'),
+           priority=95, cooldown_sec=3.0, trajectory=traj_gripper_close),
 ]

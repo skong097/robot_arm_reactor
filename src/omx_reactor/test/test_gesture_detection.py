@@ -61,7 +61,8 @@ from omx_reactor.gesture_detection import classify_hand_state, WaveDetector
 
 
 def test_classify_open_palm_middle_no_wave_is_hand_visible():
-    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.5, is_waving=False) == 'hand_visible'
+    # wrist_y=0.6 > up_threshold 0.55 → middle
+    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.6, is_waving=False) == 'hand_visible'
 
 
 def test_classify_open_palm_up_no_wave_is_hands_up():
@@ -73,18 +74,44 @@ def test_classify_open_palm_up_wave_is_hands_up_wave():
 
 
 def test_classify_open_palm_up_threshold_boundary():
-    # default up_threshold=0.4 — exclusive
-    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.39, is_waving=False) == 'hands_up'
-    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.41, is_waving=False) == 'hand_visible'
+    # default up_threshold=0.55 — exclusive
+    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.54, is_waving=False) == 'hands_up'
+    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.56, is_waving=False) == 'hand_visible'
 
 
-def test_classify_other_gesture_returns_none():
-    assert classify_hand_state('Closed_Fist', wrist_y_normalized=0.3, is_waving=False) is None
-    assert classify_hand_state('Thumb_Up', wrist_y_normalized=0.5, is_waving=False) is None
-    assert classify_hand_state('Victory', wrist_y_normalized=0.3, is_waving=True) is None
+def test_classify_open_palm_middle_wave_is_twinkle():
+    assert classify_hand_state('Open_Palm', wrist_y_normalized=0.6, is_waving=True) == 'twinkle'
+
+
+def test_classify_gesture_direct_mappings():
+    assert classify_hand_state('Pointing_Up', wrist_y_normalized=0.5, is_waving=False) == 'pointing_up'
+    assert classify_hand_state('Thumb_Up', wrist_y_normalized=0.5, is_waving=False) == 'thumb_up'
+    assert classify_hand_state('Thumb_Down', wrist_y_normalized=0.5, is_waving=False) == 'thumb_down'
+    assert classify_hand_state('Victory', wrist_y_normalized=0.5, is_waving=False) == 'victory'
+    assert classify_hand_state('ILoveYou', wrist_y_normalized=0.5, is_waving=False) == 'ilove_you'
+    assert classify_hand_state('Closed_Fist', wrist_y_normalized=0.5, is_waving=False) == 'closed_fist'
+
+
+def test_classify_gripper_distance_fallback():
+    """gesture None + thumb-index distance — gripper open/close fallback."""
+    assert classify_hand_state(None, wrist_y_normalized=0.5, is_waving=False,
+                                thumb_index_distance=0.30) == 'gripper_open'
+    assert classify_hand_state(None, wrist_y_normalized=0.5, is_waving=False,
+                                thumb_index_distance=0.02) == 'gripper_close'
+    # 중간 거리 — None
+    assert classify_hand_state(None, wrist_y_normalized=0.5, is_waving=False,
+                                thumb_index_distance=0.10) is None
+
+
+def test_classify_gripper_skipped_when_known_gesture():
+    """known gesture 인식 시 distance 무관 (gesture 매핑 우선)."""
+    # Thumb_Up + distance 큼 — gesture 매핑 thumb_up (gripper_open 아님)
+    assert classify_hand_state('Thumb_Up', wrist_y_normalized=0.5, is_waving=False,
+                                thumb_index_distance=0.30) == 'thumb_up'
 
 
 def test_classify_none_gesture_returns_none():
+    """gesture None + distance None → None (fallback 데이터 없음)."""
     assert classify_hand_state(None, wrist_y_normalized=0.5, is_waving=False) is None
     assert classify_hand_state('', wrist_y_normalized=0.3, is_waving=False) is None
 

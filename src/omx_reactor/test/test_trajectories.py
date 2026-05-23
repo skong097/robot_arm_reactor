@@ -3,12 +3,29 @@ import pytest
 from omx_reactor.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
     traj_hand_out, traj_hands_up, traj_hands_up_wave,
-    JOINT_NAMES,
+    traj_point_back, traj_nod, traj_cheer, traj_heart, traj_strong, traj_sad, traj_twinkle,
+    traj_gripper_open, traj_gripper_close,
+    JOINT_NAMES, GRIPPER_JOINT_NAMES,
 )
 
 
+# arm controller trajectory (joint1~4) — 모든 검증 항목 적용
 ALL_FACTORIES = [traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
-                 traj_hand_out, traj_hands_up, traj_hands_up_wave]
+                 traj_hand_out, traj_hands_up, traj_hands_up_wave,
+                 traj_point_back, traj_nod, traj_cheer, traj_heart, traj_strong, traj_sad,
+                 traj_twinkle]
+
+
+GRIPPER_FACTORIES = [traj_gripper_open, traj_gripper_close]
+
+
+@pytest.mark.parametrize('factory', GRIPPER_FACTORIES)
+def test_gripper_factory_uses_gripper_joint(factory):
+    t = factory()
+    assert list(t.joint_names) == GRIPPER_JOINT_NAMES
+    assert len(t.points) >= 1
+    for p in t.points:
+        assert len(p.positions) == 1   # gripper 는 single joint
 
 
 @pytest.mark.parametrize('factory', ALL_FACTORIES)

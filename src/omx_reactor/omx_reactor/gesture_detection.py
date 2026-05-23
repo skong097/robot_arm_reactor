@@ -36,27 +36,54 @@ class HandVisibilityDetector:
         return None
 
 
+# mediapipe Gesture Recognizer 의 default gesture name → event_type 직접 매핑
+# Open_Palm 만 특별 처리 (wrist 위치 + wave 결합) — 본 dict 에 포함 X
+_GESTURE_DIRECT_MAP = {
+    'Pointing_Up': 'pointing_up',
+    'Thumb_Up': 'thumb_up',
+    'Thumb_Down': 'thumb_down',
+    'Victory': 'victory',
+    'ILoveYou': 'ilove_you',
+    'Closed_Fist': 'closed_fist',
+}
+
+
 def classify_hand_state(
     gesture: str | None,
     wrist_y_normalized: float,
     is_waving: bool,
-    up_threshold: float = 0.4,
+    thumb_index_distance: float | None = None,
+    up_threshold: float = 0.55,
+    gripper_open_threshold: float = 0.20,
+    gripper_close_threshold: float = 0.05,
 ) -> str | None:
-    """recognized gesture + wrist 위치 + wave 결합 → event_type.
+    """recognized gesture + wrist 위치 + wave + thumb-index distance → event_type.
 
-    - gesture != 'Open_Palm' → None (다른 gesture 는 별 매핑 없음 — 추후 확장)
+    매핑:
     - Open_Palm + wrist y < up_threshold + wave → 'hands_up_wave'
-    - Open_Palm + wrist y < up_threshold + no wave → 'hands_up'
-    - Open_Palm + wrist 중간 → 'hand_visible'
-
-    wrist_y_normalized: 0.0 (이미지 상단) ~ 1.0 (하단). mediapipe HandLandmarker 의
-    landmark 0 (wrist) y 좌표 정규화 값.
+    - Open_Palm + wrist y < up_threshold      → 'hands_up'
+    - Open_Palm + wrist 중간 + wave           → 'twinkle'
+    - Open_Palm + wrist 중간                 → 'hand_visible'
+    - Pointing_Up/Thumb_Up/.../Closed_Fist  → 직접 매핑 (소문자 event_type)
+    - 그 외 gesture None/unknown + distance fallback:
+      - distance > gripper_open_threshold  → 'gripper_open'
+      - distance < gripper_close_threshold → 'gripper_close'
     """
-    if gesture != 'Open_Palm':
-        return None
-    if wrist_y_normalized < up_threshold:
-        return 'hands_up_wave' if is_waving else 'hands_up'
-    return 'hand_visible'
+    # Open_Palm — wrist 위치 + wave 결합
+    if gesture == 'Open_Palm':
+        if wrist_y_normalized < up_threshold:
+            return 'hands_up_wave' if is_waving else 'hands_up'
+        return 'twinkle' if is_waving else 'hand_visible'
+    # 다른 gesture 직접 매핑
+    if gesture and gesture in _GESTURE_DIRECT_MAP:
+        return _GESTURE_DIRECT_MAP[gesture]
+    # gesture 없음 / unknown — thumb-index distance fallback (gripper)
+    if thumb_index_distance is not None:
+        if thumb_index_distance > gripper_open_threshold:
+            return 'gripper_open'
+        if thumb_index_distance < gripper_close_threshold:
+            return 'gripper_close'
+    return None
 
 
 class WaveDetector:
