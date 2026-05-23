@@ -39,7 +39,7 @@ def generate_launch_description():
                    name='rapport_tracker_node', output='screen',
                    parameters=[{'ema_alpha_base': 0.7, 'conf_min_gate': 0.2}])
 
-    reactor = Node(package='omx_reactor', executable='reactor_node',
+    reactor = Node(package='arm_reactor_core', executable='reactor_node',
                    name='omx_reactor_node', output='screen')
 
     dashboard = Node(package='arm_reactor_core', executable='dashboard_node',

@@ -62,7 +62,7 @@ def is_marker_eligible(event_type: str) -> bool:
 
 
 def _static_dir() -> Path:
-    share = get_package_share_directory('omx_reactor')
+    share = get_package_share_directory('arm_reactor_core')
     return Path(share) / 'web' / 'static'
 
 

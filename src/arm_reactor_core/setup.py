@@ -1,6 +1,7 @@
 from setuptools import find_packages, setup
+from glob import glob
 
-package_name = 'omx_reactor'
+package_name = 'arm_reactor_core'
 
 setup(
     name=package_name,
@@ -10,17 +11,20 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name + '/web/static',
+            glob('arm_reactor_core/web/static/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='gjkong',
     maintainer_email='skong097@gmail.com',
-    description='OMX reactor — shim package (split 후 reactor_node + gesture_detector_node 만 잔존, 외부 import 호환용 shim 모듈 포함).',
+    description='Arm-agnostic reactor core — context, motion mapper/scheduler, dashboard, reactor node.',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'gesture_detector_node = omx_reactor.gesture_detector_node:main',
+            'dashboard_node = arm_reactor_core.dashboard_node:main',
+            'reactor_node = arm_reactor_core.reactor_node:main',
         ],
     },
 )

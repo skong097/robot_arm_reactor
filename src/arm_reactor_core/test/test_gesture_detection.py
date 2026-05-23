@@ -6,7 +6,7 @@ mediapipe HandLandmarker 결과 (landmarks 존재 여부 bool) 를 받아
 """
 import pytest
 
-from omx_reactor.gesture_detection import HandVisibilityDetector
+from arm_reactor_core.gesture_detection import HandVisibilityDetector
 
 
 def test_first_visible_emits():
@@ -57,7 +57,7 @@ def test_cooldown_zero_emits_every_transition():
 
 
 # ─── classify_hand_state — Open_Palm + wrist 위치 + wave 결합 ───
-from omx_reactor.gesture_detection import classify_hand_state, WaveDetector
+from arm_reactor_core.gesture_detection import classify_hand_state, WaveDetector
 
 
 def test_classify_open_palm_middle_no_wave_is_hand_visible():

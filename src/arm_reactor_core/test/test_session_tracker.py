@@ -1,6 +1,6 @@
 import pytest
 
-from omx_reactor.session_tracker import SessionTracker
+from arm_reactor_core.session_tracker import SessionTracker
 
 
 def test_first_valid_track_emits_new_track():

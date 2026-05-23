@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from omx_reactor.motions import Motion
+from arm_reactor_core.motion import Motion
 
 
 class SchedulerAction(Enum):
