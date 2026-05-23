@@ -17,6 +17,8 @@ class MotionScheduler:
     """단일 모션 진행 + 큐 깊이 1 + 같은 id cooldown."""
 
     def __init__(self, cooldown_default_sec: float = 5.0):
+        # NOTE: 현재 미사용 — Motion.cooldown_sec 는 float (None 불가) + 기본값 없음 →
+        # 호출자가 항상 명시. 향후 Motion 에 cooldown_sec 옵셔널화될 때 fallback 으로 활용.
         self._default_cooldown = cooldown_default_sec
         self._current: Motion | None = None
         self._queued: Motion | None = None
@@ -35,7 +37,7 @@ class MotionScheduler:
             self._current = motion
             return SchedulerAction.START
 
-        # 진행 중 모션과 같은 id → cooldown 막은 거 아니라도 같은 거 반복 X
+        # 진행 중 모션과 같은 id 재요청 → 무시 (cooldown 과 무관)
         if motion.id == self._current.id:
             return SchedulerAction.IGNORE
 
@@ -53,7 +55,7 @@ class MotionScheduler:
     def on_finish(self, t_now: float) -> Motion | None:
         """현 모션이 끝났음을 통보. 큐에 있으면 다음 모션 반환 + current 로 promote."""
         if self._current is not None:
-            cd = self._current.cooldown_sec or self._default_cooldown
+            cd = self._current.cooldown_sec
             self._available_at[self._current.id] = t_now + cd
         self._current = self._queued
         self._queued = None

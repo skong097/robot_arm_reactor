@@ -1,6 +1,5 @@
 import pytest
 
-from omx_reactor.context import Context
 from omx_reactor.motions import Motion
 from omx_reactor.motion_scheduler import MotionScheduler, SchedulerAction
 
@@ -59,8 +58,8 @@ def test_lower_priority_with_current_high_ignored():
     sch = MotionScheduler()
     sch.submit(_m('HELLO', priority=100), t_now=0.0)
     res = sch.submit(_m('DANCE', priority=10), t_now=0.5)
-    assert res in (SchedulerAction.QUEUE, SchedulerAction.IGNORE)
-    # 큐로 미루는 것까진 OK
+    # 현 구현: 같은/낮은 priority 는 큐로 미룸 (덮어쓰기 가능)
+    assert res == SchedulerAction.QUEUE
 
 
 def test_on_finish_returns_queued_motion():
@@ -76,3 +75,15 @@ def test_on_finish_empty_queue_returns_none():
     sch.submit(_m('DANCE'), t_now=0.0)
     nxt = sch.on_finish(t_now=2.0)
     assert nxt is None
+
+
+def test_zero_cooldown_motion_allows_immediate_resubmit():
+    """HELLO/BYE/IDLE have cooldown_sec=0.0 (no cooldown). Must START immediately after on_finish.
+
+    Regression: `or self._default_cooldown` coerces 0.0 → 5.0, breaking session-greeting motions.
+    """
+    sch = MotionScheduler()
+    sch.submit(_m('HELLO', cooldown=0.0), t_now=0.0)
+    sch.on_finish(t_now=1.0)
+    res = sch.submit(_m('HELLO', cooldown=0.0), t_now=1.0)
+    assert res == SchedulerAction.START
