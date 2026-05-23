@@ -52,3 +52,16 @@ def test_track_id_change_treated_as_new_track():
     st = SessionTracker(bye_grace_sec=3.0)
     st.update(7, t_now=0.0)
     assert st.update(9, t_now=0.5) == 'new_track'
+
+
+def test_same_id_returns_after_gone_emits_new_track():
+    """Customer leaves >grace, gone fires, then SAME id reappears -> new session = new_track.
+
+    Distinct from test_track_lost_within_grace_no_event (suppress re-greet only within grace).
+    Distinct from test_new_track_after_gone_emits_new_track_again (which uses different id).
+    """
+    st = SessionTracker(bye_grace_sec=3.0)
+    st.update(7, t_now=0.0)
+    st.update(-1, t_now=1.0)
+    st.update(-1, t_now=4.01)      # track_gone emitted
+    assert st.update(7, t_now=5.0) == 'new_track'   # same id, but new session

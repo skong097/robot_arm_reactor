@@ -31,6 +31,8 @@ class SessionTracker:
                 and current_track_id == self._last_valid_id
                 and not self._gone_emitted
             )
+            # gone 발행 이후의 복귀는 같은 id 라도 새 세션 — 인사 재발행
+            returning_after_gone = prev == -1 and self._gone_emitted
 
             self._lost_at = None
             self._gone_emitted = False
@@ -39,6 +41,9 @@ class SessionTracker:
 
             if returning_same_within_grace:
                 return None
+            if returning_after_gone:
+                # 같은 id 든 다른 id 든 세션 종료 후 복귀 → 새 인사
+                return 'new_track'
             if prev_valid == -1:
                 # 한 번도 valid id 를 본 적 없음 — 첫 인사
                 return 'new_track'
