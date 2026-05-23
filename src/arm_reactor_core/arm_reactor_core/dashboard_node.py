@@ -225,6 +225,27 @@ class DashboardNode(Node):
             except Exception as e:
                 self.get_logger().warning(f'ws_engaging error: {e}')
 
+        @app.websocket('/ws/joint_states')
+        async def ws_joint_states(ws: WebSocket):
+            """sub-spec c — joint_state JSON broadcast (30 Hz throttle).
+
+            urdf 모드 브라우저측 three.js 가 구독 → robot.setJointValue(name, pos).
+            변경된 joint_state (last_t 비교) 만 전송 — publisher 없을 때 메시지 폭주 방지.
+            """
+            await ws.accept()
+            last_t = 0.0
+            try:
+                while True:
+                    await asyncio.sleep(1.0 / 30)   # 30 Hz throttle
+                    js = self._latest_joint_state
+                    if js is not None and js.get('t', 0.0) != last_t:
+                        await ws.send_json(js)
+                        last_t = js['t']
+            except WebSocketDisconnect:
+                pass
+            except Exception as e:
+                self.get_logger().warning(f'ws_joint_states error: {e}')
+
         @app.websocket('/ws/stream')
         async def ws_stream(ws: WebSocket):
             """omx 고유 — reactor 모션 + 이벤트 (Step B 의 타임라인 source)."""
