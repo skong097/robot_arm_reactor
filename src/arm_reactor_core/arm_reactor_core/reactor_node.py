@@ -1,6 +1,11 @@
-"""reactor_node — V·A 신호 + 세션 이벤트 -> motion_mapper -> scheduler -> OMX action."""
+"""reactor_node — V·A 신호 + 세션 이벤트 -> motion_mapper -> scheduler -> arm action.
+
+motion pack 은 ROS param `motion_pack_module` (default 'omx_motion_pack') 으로 runtime
+선택. importlib 으로 `<motion_pack_module>.motions.MOTIONS` 동적 로드.
+"""
 from __future__ import annotations
 
+import importlib
 import json
 
 import rclpy
@@ -11,7 +16,6 @@ from std_msgs.msg import String
 from dobi_npc_msgs.msg import EmotionState, RapportEvent
 
 from arm_reactor_core.context import Context, GestureSignal, make_emotion_signal
-from omx_motion_pack.motions import MOTIONS
 from arm_reactor_core.motion_mapper import select_motion
 from arm_reactor_core.motion_scheduler import MotionScheduler, SchedulerAction
 from arm_reactor_core.session_tracker import SessionTracker
@@ -28,11 +32,20 @@ class ReactorNode(Node):
         self.declare_parameter('bye_grace_sec', 3.0)
         self.declare_parameter('deadband', 0.10)
         self.declare_parameter('tick_period_sec', 0.1)
+        self.declare_parameter('motion_pack_module', 'omx_motion_pack')
 
         cd = float(self.get_parameter('cooldown_default_sec').value)
         self._bye_grace = float(self.get_parameter('bye_grace_sec').value)
         self._deadband = float(self.get_parameter('deadband').value)
         tick = float(self.get_parameter('tick_period_sec').value)
+        mod_name = str(self.get_parameter('motion_pack_module').value)
+
+        try:
+            _mod = importlib.import_module(mod_name + '.motions')
+        except ImportError as e:
+            self.get_logger().error(f'motion_pack {mod_name!r} import failed: {e}')
+            raise
+        self._motions = _mod.MOTIONS
 
         self._session = SessionTracker(bye_grace_sec=self._bye_grace)
         self._scheduler = MotionScheduler(cooldown_default_sec=cd)
@@ -57,7 +70,7 @@ class ReactorNode(Node):
         self.get_logger().info(
             f'omx_reactor_node ready — deadband={self._deadband}, '
             f'bye_grace={self._bye_grace}, cooldown_default={cd}, '
-            f'tick={tick}, motions={len(MOTIONS)}')
+            f'tick={tick}, motion_pack={mod_name}, motions={len(self._motions)}')
 
     # ── 구독 ──────────────────────────────────────────────
     def _on_emotion(self, msg: EmotionState):
@@ -109,7 +122,7 @@ class ReactorNode(Node):
         ctx = Context(emotion=emo, gesture=gesture,
                       session_event=session_event, t_now=t_now)
 
-        chosen = select_motion(ctx, MOTIONS)
+        chosen = select_motion(ctx, self._motions)
         if chosen is not None:
             action = self._scheduler.submit(chosen, t_now=t_now)
             if action == SchedulerAction.START:
