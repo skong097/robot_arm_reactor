@@ -94,7 +94,7 @@ class DashboardNode(Node):
             finally:
                 self._clients.discard(ws)
 
-        app.mount('/static', StaticFiles(directory=static), name='static')
+        app.mount('/static', StaticFiles(directory=static, follow_symlink=True), name='static')
         return app
 
     def _serve(self):
