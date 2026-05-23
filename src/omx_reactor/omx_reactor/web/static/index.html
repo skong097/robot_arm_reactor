@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>OMX Reactor — Live Demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>OMX Reactor</h1>
+    <div class="status-bar">
+      <span>V: <b id="v">-</b></span>
+      <span>A: <b id="a">-</b></span>
+      <span>conf: <b id="conf">-</b></span>
+      <span>source: <b id="source">-</b></span>
+      <span class="sep">|</span>
+      <span>모션: <b id="current_motion">-</b></span>
+      <span>다음: <b id="queued_motion">-</b></span>
+      <span>track: <b id="track">-</b></span>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>V·A 4분면 (Russell circumplex)</h2>
+      <canvas id="va_canvas" width="360" height="360"></canvas>
+    </section>
+
+    <section>
+      <h2>engagement-timeline (60s sliding)</h2>
+      <engagement-timeline id="timeline"></engagement-timeline>
+    </section>
+
+    <section>
+      <h2>최근 이벤트</h2>
+      <ul id="events"></ul>
+    </section>
+  </main>
+
+  <script type="module" src="/static/engagement-timeline.js"></script>
+  <script type="module" src="/static/va_quadrant.js"></script>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
