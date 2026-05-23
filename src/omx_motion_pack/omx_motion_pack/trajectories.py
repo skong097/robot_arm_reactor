@@ -15,13 +15,17 @@ OMX joint 매핑:
 from __future__ import annotations
 
 from builtin_interfaces.msg import Duration
+from control_msgs.action import GripperCommand
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
 from arm_reactor_core.dispatch import Dispatch
 
-# OMX 의 두 action — 그리퍼도 FollowJointTrajectory (controller_manager 의 GripperActionController X)
+# OMX 의 두 action — arm 은 FollowJointTrajectory, 그리퍼는 GripperCommand
+# (open_manipulator_bringup 의 controller_manager 가 gripper_controller 를
+# position_controllers/GripperActionController 로 설정 — live verify 결과).
 ARM_ACT = '/arm_controller/follow_joint_trajectory'
-GRIPPER_ACT = '/gripper_controller/follow_joint_trajectory'
+GRIPPER_ACT = '/gripper_controller/gripper_cmd'
+GRIPPER_MAX_EFFORT = 5.0   # GripperSender default 와 동일
 
 JOINT_NAMES = ['joint1', 'joint2', 'joint3', 'joint4']
 HOME = [0.0, -1.0, 0.5, 0.5]              # OMX 의 일반 home 자세 (정면)
@@ -240,29 +244,29 @@ def _build_twinkle() -> JointTrajectory:
     ])
 
 
-# ─── gripper trajectory — 별 controller (/gripper_controller/follow_joint_trajectory) ───
-# joint_names = ['gripper_left_joint'] — reactor 가 trajectory.joint_names 으로 dispatch 분기
+# ─── gripper — /gripper_controller/gripper_cmd (control_msgs/action/GripperCommand) ───
+# OMX 의 그리퍼는 GripperActionController — position 단일 float (rad) 받음.
+# GRIPPER_JOINT_NAMES 는 외부 import 호환 위해 유지 (현 sender 는 안 씀).
 
 GRIPPER_JOINT_NAMES = ['gripper_left_joint']
 GRIPPER_OPEN_ANGLE = 0.019    # OMX default open (rad)
 GRIPPER_CLOSE_ANGLE = -0.010  # OMX default close
 
 
-def _gripper_traj(angle: float, t_sec: float = 0.5) -> JointTrajectory:
-    t = JointTrajectory()
-    t.joint_names = list(GRIPPER_JOINT_NAMES)
-    t.points = [_point([angle], t_sec)]
-    return t
+def _build_gripper_open() -> GripperCommand.Goal:
+    """gripper 열기 — position +0.019 rad."""
+    g = GripperCommand.Goal()
+    g.command.position = float(GRIPPER_OPEN_ANGLE)
+    g.command.max_effort = GRIPPER_MAX_EFFORT
+    return g
 
 
-def _build_gripper_open() -> JointTrajectory:
-    """gripper 열기 — gripper_left_joint = +0.019 rad."""
-    return _gripper_traj(GRIPPER_OPEN_ANGLE, t_sec=0.5)
-
-
-def _build_gripper_close() -> JointTrajectory:
-    """gripper 닫기 — gripper_left_joint = -0.010 rad."""
-    return _gripper_traj(GRIPPER_CLOSE_ANGLE, t_sec=0.5)
+def _build_gripper_close() -> GripperCommand.Goal:
+    """gripper 닫기 — position -0.010 rad."""
+    g = GripperCommand.Goal()
+    g.command.position = float(GRIPPER_CLOSE_ANGLE)
+    g.command.max_effort = GRIPPER_MAX_EFFORT
+    return g
 
 
 # ─── list[Dispatch] wrappers (외부 factory — Motion.trajectory 시그니처 만족) ──────
@@ -334,8 +338,8 @@ def traj_twinkle() -> list[Dispatch]:
 
 
 def traj_gripper_open() -> list[Dispatch]:
-    return [Dispatch(GRIPPER_ACT, _build_gripper_open(), 'trajectory')]
+    return [Dispatch(GRIPPER_ACT, _build_gripper_open(), 'gripper')]
 
 
 def traj_gripper_close() -> list[Dispatch]:
-    return [Dispatch(GRIPPER_ACT, _build_gripper_close(), 'trajectory')]
+    return [Dispatch(GRIPPER_ACT, _build_gripper_close(), 'gripper')]

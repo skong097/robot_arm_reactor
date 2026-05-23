@@ -21,7 +21,11 @@ GRIPPER_FACTORIES = [traj_gripper_open, traj_gripper_close]
 
 
 def _msg(factory):
-    """factory() -> list[Dispatch] 의 첫 Dispatch 의 msg (JointTrajectory) 반환 헬퍼."""
+    """factory() -> list[Dispatch] 의 첫 Dispatch 의 msg 반환 헬퍼.
+
+    arm factory: msg 는 JointTrajectory.
+    gripper factory: msg 는 GripperCommand.Goal (joint_names/points 없음, command.position).
+    """
     dispatches = factory()
     assert isinstance(dispatches, list) and len(dispatches) == 1, \
         f'{factory.__name__} expected 1-element list[Dispatch], got {dispatches!r}'
@@ -29,12 +33,16 @@ def _msg(factory):
 
 
 @pytest.mark.parametrize('factory', GRIPPER_FACTORIES)
-def test_gripper_factory_uses_gripper_joint(factory):
-    t = _msg(factory)
-    assert list(t.joint_names) == GRIPPER_JOINT_NAMES
-    assert len(t.points) >= 1
-    for p in t.points:
-        assert len(p.positions) == 1   # gripper 는 single joint
+def test_gripper_factory_returns_gripper_command_goal(factory):
+    """OMX gripper 는 control_msgs/action/GripperCommand — position 단일 float."""
+    g = _msg(factory)
+    # GripperCommand.Goal 는 command.position (float) + command.max_effort (float)
+    assert hasattr(g, 'command'), f'{factory.__name__} msg 가 .command 없음 — Goal 타입 아님'
+    assert isinstance(g.command.position, float)
+    assert isinstance(g.command.max_effort, float)
+    # OMX safe range: GRIPPER_OPEN_ANGLE=0.019, GRIPPER_CLOSE_ANGLE=-0.010 (±0.05 rad 여유)
+    assert -0.05 <= g.command.position <= 0.05, \
+        f'{factory.__name__} position {g.command.position} 안전 범위 벗어남'
 
 
 @pytest.mark.parametrize('factory', ALL_FACTORIES)
@@ -70,7 +78,8 @@ def test_positions_length_matches_joints(factory):
 
 
 def test_at_least_one_point():
-    for f in ALL_FACTORIES + GRIPPER_FACTORIES:
+    # arm factory 만 points 검증 (gripper 는 JointTrajectory 가 아니라 GripperCommand.Goal)
+    for f in ALL_FACTORIES:
         assert len(_msg(f).points) >= 1
 
 
@@ -114,9 +123,9 @@ def test_arm_factory_dispatch_action_and_kind(factory):
 
 @pytest.mark.parametrize('factory', GRIPPER_FACTORIES)
 def test_gripper_factory_dispatch_action_and_kind(factory):
-    # OMX 그리퍼도 FollowJointTrajectory (controller_manager 의 GripperActionController X)
-    # 라 kind 는 'trajectory'. action_name 만 GRIPPER_ACT 로 갈림.
+    # OMX 그리퍼는 GripperActionController (control_msgs/action/GripperCommand) —
+    # arm 의 FollowJointTrajectory 와 다른 sender 사용 (GripperSender).
     dispatches = factory()
     assert all(isinstance(d, Dispatch) for d in dispatches)
     assert all(d.action_name == GRIPPER_ACT for d in dispatches)
-    assert all(d.kind == 'trajectory' for d in dispatches)
+    assert all(d.kind == 'gripper' for d in dispatches)
