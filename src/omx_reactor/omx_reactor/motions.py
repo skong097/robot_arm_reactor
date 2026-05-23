@@ -21,5 +21,36 @@ class Motion:
     trajectory: Callable[[], object]     # () -> JointTrajectory
 
 
-# MOTIONS 리스트는 Task 9 에서 작성 (trajectories.py 완성 후)
-MOTIONS: list[Motion] = []
+# trajectories import 는 함수 정의 후에 한다 (순환 방지 필요 없음 — trajectories.py 는 motions 안 참조)
+from omx_reactor.trajectories import (
+    traj_dance, traj_freeze, traj_console, traj_idle, traj_hello, traj_bye,
+)
+
+MOTIONS: list[Motion] = [
+    # 감정 4분면 (priority 10)
+    Motion('DANCE',
+           trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q1'),
+           priority=10, cooldown_sec=5.0, trajectory=traj_dance),
+    Motion('FREEZE',
+           trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q2'),
+           priority=10, cooldown_sec=5.0, trajectory=traj_freeze),
+    Motion('CONSOLE',
+           trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q3'),
+           priority=10, cooldown_sec=5.0, trajectory=traj_console),
+    Motion('IDLE',
+           trigger=lambda c: bool(c.emotion and
+                                  (c.emotion.quadrant == 'Q4' or c.emotion.in_deadband)),
+           priority=0,  cooldown_sec=0.0, trajectory=traj_idle),
+
+    # 세션 경계 (priority 100 — 분면 모션 interrupt)
+    Motion('HELLO',
+           trigger=lambda c: c.session_event == 'new_track',
+           priority=100, cooldown_sec=0.0, trajectory=traj_hello),
+    Motion('BYE',
+           trigger=lambda c: c.session_event == 'track_gone',
+           priority=100, cooldown_sec=0.0, trajectory=traj_bye),
+
+    # P1+ 자리 (지금은 주석)
+    # Motion('WAVE_BACK', ..., priority=80, ..., trajectory=traj_wave_back),
+    # Motion('LEAN_TO_USER', ..., priority=50, ..., trajectory=traj_lean),
+]
