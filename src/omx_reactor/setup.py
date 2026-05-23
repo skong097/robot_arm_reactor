@@ -14,6 +14,8 @@ setup(
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/web/static',
             glob('omx_reactor/web/static/*')),
+        ('share/' + package_name + '/models/external_cam',
+            glob('models/external_cam/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -34,16 +34,25 @@
 .status-bar b { color: var(--text-primary); }
 .status-bar .sep { color: var(--text-muted); }
 
-.omx-main {
-  /* 1x2 반응형 — 폭 920px (450×2 + gap) 이상이면 좌:감정분석 / 우:로봇팔.
-     그 아래로는 1 column 으로 wrap (오른쪽이 아래로 내려옴). */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+/* 1x2 명시 grid — 폭 ≥ 768px 면 좌/우, 미만이면 1 col (오른쪽이 아래로). */
+main.omx-main {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
   gap: var(--space-4);
   padding: var(--space-4);
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   align-items: start;
+}
+main.omx-main > section.card { min-width: 0; }   /* grid item overflow 방어 */
+/* vendored components.css 의 .engaging-analytics { grid-column: 1 / -1 } 무효화 —
+   doby modes-grid 의 풀폭 expand 컨벤션이 omx 1x2 layout 와 충돌. */
+main.omx-main > section.engaging-analytics { grid-column: auto !important; }
+
+@media (max-width: 768px) {
+  main.omx-main {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 .omx-right .omx-gazebo-view {
@@ -61,6 +70,12 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
+}
+.omx-right .omx-gazebo-view img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* 이벤트 로그 — omx_reactor 고유 */

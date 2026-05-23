@@ -24,11 +24,14 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from std_msgs.msg import String
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
 
 from dobi_npc_msgs.msg import EmotionState, RapportEvent
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
@@ -99,9 +102,15 @@ class DashboardNode(Node):
         self._loop: asyncio.AbstractEventLoop | None = None
         self._loop_ready = threading.Event()
 
+        # OMX Gazebo view — /external_cam/image 구독 + 최신 JPEG 캐시 (MJPEG stream 용)
+        self._cv_bridge = CvBridge()
+        self._latest_jpeg: bytes | None = None
+        self._jpeg_lock = threading.Lock()
+
         self.create_subscription(EmotionState, '/emotion/state', self._on_emotion, 10)
         self.create_subscription(RapportEvent, '/rapport/event', self._on_rapport, 10)
         self.create_subscription(String, '/omx_reactor/state', self._on_reactor, 10)
+        self.create_subscription(Image, '/external_cam/image', self._on_cam_image, 1)
 
         self._app = self._build_app()
         self._thread = threading.Thread(target=self._serve, daemon=True)
@@ -179,6 +188,26 @@ class DashboardNode(Node):
                 pass
             finally:
                 self._ws_stream_clients.discard(ws)
+
+        @app.get('/api/gazebo_view.mjpg')
+        async def gazebo_view():
+            """OMX Gazebo 외부 카메라 → MJPEG stream (multipart/x-mixed-replace).
+
+            sensor publish ~15Hz. 본 stream 도 ~15 FPS (5ms idle sleep + 60ms cap).
+            """
+            async def gen():
+                boundary = b'--frame'
+                last_sent = None
+                while True:
+                    with self._jpeg_lock:
+                        jpg = self._latest_jpeg
+                    if jpg is not None and jpg is not last_sent:
+                        last_sent = jpg
+                        yield boundary + b'\r\nContent-Type: image/jpeg\r\nContent-Length: ' \
+                              + str(len(jpg)).encode() + b'\r\n\r\n' + jpg + b'\r\n'
+                    await asyncio.sleep(0.05)
+            return StreamingResponse(gen(),
+                                     media_type='multipart/x-mixed-replace; boundary=frame')
 
         app.mount('/static', StaticFiles(directory=static, follow_symlink=True), name='static')
         return app
@@ -306,6 +335,17 @@ class DashboardNode(Node):
         self._omx_snapshot['rapport'] = ev
         self._omx_snapshot['events'].append({'type': 'rapport', **ev})
         self._push_stream({'type': 'rapport', 'payload': ev})
+
+    def _on_cam_image(self, msg: Image):
+        """Gazebo 외부 카메라 frame 받아 JPEG 인코딩 후 캐시."""
+        try:
+            bgr = self._cv_bridge.imgmsg_to_cv2(msg, 'bgr8')
+            ok, jpg = cv2.imencode('.jpg', bgr, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            if ok:
+                with self._jpeg_lock:
+                    self._latest_jpeg = jpg.tobytes()
+        except Exception as e:
+            self.get_logger().warning(f'gazebo cam encode 실패: {e}')
 
     def _on_reactor(self, msg: String):
         try:
