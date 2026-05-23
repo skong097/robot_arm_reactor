@@ -1,6 +1,6 @@
 """demo.launch.py — 통합 데모.
 
-ros2 launch omx_reactor demo.launch.py camera:=v4l2|file|external|gazebo [file_path:=...]
+ros2 launch omx_motion_pack demo.launch.py camera:=v4l2|file|external|gazebo [file_path:=...]
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, GroupAction
@@ -14,7 +14,7 @@ def generate_launch_description():
     camera_arg = DeclareLaunchArgument('camera', default_value='v4l2',
                                        description='v4l2|file|external|gazebo')
 
-    pkg_share = FindPackageShare('omx_reactor')
+    pkg_share = FindPackageShare('omx_motion_pack')
 
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -42,7 +42,7 @@ def generate_launch_description():
     reactor = Node(package='omx_reactor', executable='reactor_node',
                    name='omx_reactor_node', output='screen')
 
-    dashboard = Node(package='omx_reactor', executable='dashboard_node',
+    dashboard = Node(package='arm_reactor_core', executable='dashboard_node',
                      name='omx_dashboard_node', output='screen',
                      parameters=[{'http_port': 8800}])
 

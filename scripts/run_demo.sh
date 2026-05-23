@@ -46,4 +46,4 @@ LAUNCH_ARGS="camera:=$CAMERA"
 [ -n "$FILE_PATH" ] && LAUNCH_ARGS="$LAUNCH_ARGS file_path:=$FILE_PATH"
 
 # foreground — Ctrl+C 한 번에 자식 다 죽음
-exec ros2 launch omx_reactor demo.launch.py $LAUNCH_ARGS
+exec ros2 launch omx_motion_pack demo.launch.py $LAUNCH_ARGS

@@ -1,7 +1,7 @@
 import pytest
 
 from arm_reactor_core.dispatch import Dispatch
-from omx_reactor.trajectories import (
+from omx_motion_pack.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
     traj_hand_out, traj_hands_up, traj_hands_up_wave,
     traj_point_back, traj_nod, traj_cheer, traj_heart, traj_strong, traj_sad, traj_twinkle,
