@@ -24,7 +24,7 @@ class Motion:
 # trajectories import 는 함수 정의 후에 한다 (순환 방지 필요 없음 — trajectories.py 는 motions 안 참조)
 from omx_reactor.trajectories import (
     traj_dance, traj_freeze, traj_console, traj_idle, traj_hello, traj_bye,
-    traj_hand_out,
+    traj_hand_out, traj_hands_up, traj_hands_up_wave,
 )
 
 MOTIONS: list[Motion] = [
@@ -51,10 +51,16 @@ MOTIONS: list[Motion] = [
            trigger=lambda c: c.session_event == 'track_gone',
            priority=100, cooldown_sec=0.0, trajectory=traj_bye),
 
-    # Gesture mimic (priority 80 — HELLO/BYE 보다 낮지만 분면 모션 interrupt)
+    # Gesture mimic (HELLO/BYE 보다 낮지만 분면 모션 interrupt)
     Motion('HAND_OUT',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'hand_visible'),
            priority=80, cooldown_sec=5.0, trajectory=traj_hand_out),
+    Motion('HANDS_UP',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up'),
+           priority=85, cooldown_sec=5.0, trajectory=traj_hands_up),
+    Motion('HANDS_UP_WAVE',
+           trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up_wave'),
+           priority=90, cooldown_sec=5.0, trajectory=traj_hands_up_wave),
 
     # P2+ 자리
     # Motion('LEAN_TO_USER', ..., priority=50, ..., trajectory=traj_lean),

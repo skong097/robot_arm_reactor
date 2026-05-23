@@ -76,12 +76,15 @@ curl -fsSL https://storage.googleapis.com/mediapipe-models/face_landmarker/face_
 # mediapipe EfficientDet-Lite0 (person detection, gefa 후속용)
 curl -fsSL https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/int8/latest/efficientdet_lite0.tflite \
   -o "$MODELS_DIR/efficientdet_lite0.tflite"
-# mediapipe HandLandmarker (omx_reactor 의 gesture_detector_node 용)
+# mediapipe GestureRecognizer (omx_reactor 의 gesture_detector_node — Open_Palm 등 7 gesture + 21 hand landmark)
+curl -fsSL https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task \
+  -o "$GESTURE_DIR/gesture_recognizer.task"
+# (옵션) HandLandmarker — gesture_detector_node 가 GestureRecognizer 사용으로 더 이상 직접 필요 X 단 후속 변경 시 참고
 curl -fsSL https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task \
   -o "$GESTURE_DIR/hand_landmarker.task"
 ls -lh "$MODELS_DIR" "$GESTURE_DIR"
 ```
-Expected: 3 파일 다운로드 (face_landmarker ~3.7MB, efficientdet_lite0 ~4.4MB, hand_landmarker ~7MB).
+Expected: 4 파일 다운로드 (face_landmarker ~3.7MB, efficientdet_lite0 ~4.4MB, gesture_recognizer ~8MB, hand_landmarker ~7MB).
 
 ### 옵션 B — doby_controller 로컬 카피 (개발자 본인)
 

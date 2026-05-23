@@ -108,3 +108,33 @@ def traj_hand_out() -> JointTrajectory:
         _point(REACH, 2.5),    # 1s hold
         _point(HOME,  3.5),
     ])
+
+
+def traj_hands_up() -> JointTrajectory:
+    """만세 — 팔 위로 쭉 펴기. joint2 -1.2 (shoulder 위 limit) + joint3 0 + joint4 0 (elbow/wrist 일자).
+    + 0.4s hold + home 복귀. 2.7s.
+    """
+    UP = [0.0, -1.2, 0.0, 0.0]
+    return _traj([
+        _point(HOME, 0.4),
+        _point(UP,   1.5),
+        _point(UP,   1.9),    # hold
+        _point(HOME, 2.7),
+    ])
+
+
+def traj_hands_up_wave() -> JointTrajectory:
+    """팔 위로 쭉 + 좌우 흔들기 (인사/안녕) — UP 자세 유지 + joint1 ±0.7 swing × 2회. 5.2s."""
+    UP      = [0.0,  -1.2, 0.0, 0.0]
+    WAVE_R  = [0.7,  -1.2, 0.0, 0.0]
+    WAVE_L  = [-0.7, -1.2, 0.0, 0.0]
+    return _traj([
+        _point(HOME,   0.4),
+        _point(UP,     1.5),
+        _point(WAVE_R, 2.1),
+        _point(WAVE_L, 2.7),
+        _point(WAVE_R, 3.3),
+        _point(WAVE_L, 3.9),
+        _point(UP,     4.5),
+        _point(HOME,   5.2),
+    ])
