@@ -44,3 +44,31 @@ def test_positions_length_matches_joints(factory):
 def test_at_least_one_point():
     for f in ALL_FACTORIES:
         assert len(f().points) >= 1
+
+
+# velocity gate — expressive motion limit, hardware (Dynamixel XM430) default ~4.8 rad/s
+# 2.5 rad/s = current peak (2.0 in DANCE/HELLO) + 0.5 headroom for future tuning
+MAX_VELOCITY_RAD_S = 2.5
+
+
+@pytest.mark.parametrize('factory', ALL_FACTORIES)
+def test_max_velocity_within_limit(factory):
+    """Each segment's per-joint velocity must be <= MAX_VELOCITY_RAD_S.
+
+    Single-point factories (IDLE, FREEZE) are exempt (no segments).
+    Note: first segment's velocity from arbitrary prior pose is not gated here
+    (this would require runtime tracking) — design assumes prior motion ends at HOME.
+    """
+    t = factory()
+    if len(t.points) < 2:
+        return
+    times = [p.time_from_start.sec + p.time_from_start.nanosec * 1e-9
+             for p in t.points]
+    for i in range(len(t.points) - 1):
+        dt = times[i + 1] - times[i]
+        for j, (a, b) in enumerate(zip(t.points[i].positions,
+                                       t.points[i + 1].positions)):
+            v = abs(b - a) / dt
+            assert v <= MAX_VELOCITY_RAD_S, \
+                (f'{factory.__name__} joint{j+1} segment {i}->{i+1}: '
+                 f'v={v:.2f} > {MAX_VELOCITY_RAD_S} rad/s')

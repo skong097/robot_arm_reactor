@@ -5,7 +5,12 @@ OMX joint 매핑:
   joint2: shoulder pitch
   joint3: elbow pitch
   joint4: wrist pitch
-모든 각도 ±60° 이내. self-collision 회피 책임은 작성자.
+
+안전 제약:
+  - 각도: ±1.2 rad (~±69°) 이내 (test_positions_within_safe_range 게이트)
+  - velocity: <= 2.0 rad/s 의 expressive motion 한계 — 2.5 rad/s gate 로 regression-protect
+    (Dynamixel XM430 default ~4.8 rad/s 의 ~40% — visual crispness + safety 균형)
+  - self-collision 회피 책임은 작성자
 """
 from __future__ import annotations
 
