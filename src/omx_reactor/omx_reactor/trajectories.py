@@ -17,6 +17,12 @@ from __future__ import annotations
 from builtin_interfaces.msg import Duration
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 
+from arm_reactor_core.dispatch import Dispatch
+
+# OMX 의 두 action — 그리퍼도 FollowJointTrajectory (controller_manager 의 GripperActionController X)
+ARM_ACT = '/arm_controller/follow_joint_trajectory'
+GRIPPER_ACT = '/gripper_controller/follow_joint_trajectory'
+
 JOINT_NAMES = ['joint1', 'joint2', 'joint3', 'joint4']
 HOME = [0.0, -1.0, 0.5, 0.5]              # OMX 의 일반 home 자세 (정면)
 
@@ -36,12 +42,12 @@ def _traj(points: list[JointTrajectoryPoint]) -> JointTrajectory:
     return t
 
 
-def traj_idle() -> JointTrajectory:
+def _build_idle() -> JointTrajectory:
     """home pose 정지."""
     return _traj([_point(HOME, 0.5)])
 
 
-def traj_hello() -> JointTrajectory:
+def _build_hello() -> JointTrajectory:
     """home → 정면 + joint4 위로 ±30° × 2 (손 흔듦), 3s."""
     return _traj([
         _point(HOME,                   0.5),
@@ -53,7 +59,7 @@ def traj_hello() -> JointTrajectory:
     ])
 
 
-def traj_bye() -> JointTrajectory:
+def _build_bye() -> JointTrajectory:
     """HELLO 슬로우 (1.5×), 4.5s."""
     return _traj([
         _point(HOME,                   0.75),
@@ -65,7 +71,7 @@ def traj_bye() -> JointTrajectory:
     ])
 
 
-def traj_dance() -> JointTrajectory:
+def _build_dance() -> JointTrajectory:
     """joint1 base ±0.8rad swing × 3 + joint4 wave, 4s."""
     return _traj([
         _point(HOME,                    0.4),
@@ -77,14 +83,14 @@ def traj_dance() -> JointTrajectory:
     ])
 
 
-def traj_freeze() -> JointTrajectory:
+def _build_freeze() -> JointTrajectory:
     """현 자세 + joint2 살짝 down 0.02rad (기죽음), 1s."""
     return _traj([
         _point([0.0, -1.02, 0.5, 0.5], 1.0),
     ])
 
 
-def traj_console() -> JointTrajectory:
+def _build_console() -> JointTrajectory:
     """joint1 정면, joint4 up/down ±0.25rad × 4 (쓰담쓰담), 4s."""
     return _traj([
         _point(HOME,                    0.4),
@@ -97,7 +103,7 @@ def traj_console() -> JointTrajectory:
     ])
 
 
-def traj_hand_out() -> JointTrajectory:
+def _build_hand_out() -> JointTrajectory:
     """사용자가 손 내밀면 OMX 도 손 내밂 (mimic) — joint2 수평 + joint3 펴기 reach
     + 1s hold + home 복귀. 3.5s total. velocity peak ~0.91 rad/s.
     """
@@ -110,7 +116,7 @@ def traj_hand_out() -> JointTrajectory:
     ])
 
 
-def traj_hands_up() -> JointTrajectory:
+def _build_hands_up() -> JointTrajectory:
     """만세 — 팔 위로 쭉 펴기. joint2 -1.2 (shoulder 위 limit) + joint3 0 + joint4 0 (elbow/wrist 일자).
     + 0.4s hold + home 복귀. 2.7s.
     """
@@ -123,7 +129,7 @@ def traj_hands_up() -> JointTrajectory:
     ])
 
 
-def traj_hands_up_wave() -> JointTrajectory:
+def _build_hands_up_wave() -> JointTrajectory:
     """팔 위로 쭉 + 좌우 흔들기 (인사/안녕) — UP 자세 유지 + joint1 ±0.7 swing × 2회. 5.2s."""
     UP      = [0.0,  -1.2, 0.0, 0.0]
     WAVE_R  = [0.7,  -1.2, 0.0, 0.0]
@@ -140,7 +146,7 @@ def traj_hands_up_wave() -> JointTrajectory:
     ])
 
 
-def traj_point_back() -> JointTrajectory:
+def _build_point_back() -> JointTrajectory:
     """가리킴 — joint1 한쪽 + joint3/joint4 펴기 (gripper 정면 reach), 2.5s."""
     PT = [0.6, -0.5, 0.0, 0.0]
     return _traj([
@@ -151,7 +157,7 @@ def traj_point_back() -> JointTrajectory:
     ])
 
 
-def traj_nod() -> JointTrajectory:
+def _build_nod() -> JointTrajectory:
     """끄덕 — joint4 위아래 × 3 (좋아 응답), 3.3s. velocity peak 2.0 rad/s."""
     NOD_DN = [0.0, -1.0, 0.5, 1.0]
     NOD_UP = [0.0, -1.0, 0.5, 0.0]
@@ -165,7 +171,7 @@ def traj_nod() -> JointTrajectory:
     ])
 
 
-def traj_cheer() -> JointTrajectory:
+def _build_cheer() -> JointTrajectory:
     """축하 (V 사인) — joint1 ±0.5 × 4 + joint2 살짝 위, 3.7s. velocity peak 2.0 rad/s."""
     UP_R = [0.5,  -1.2, 0.0, 0.0]
     UP_L = [-0.5, -1.2, 0.0, 0.0]
@@ -182,7 +188,7 @@ def traj_cheer() -> JointTrajectory:
     ])
 
 
-def traj_heart() -> JointTrajectory:
+def _build_heart() -> JointTrajectory:
     """사랑해 손 — 부드러운 좌우 swing × 2 (천천히), 4.0s."""
     HRT_R = [0.4, -0.8, 0.3, 0.4]
     HRT_L = [-0.4, -0.8, 0.3, 0.4]
@@ -195,7 +201,7 @@ def traj_heart() -> JointTrajectory:
     ])
 
 
-def traj_strong() -> JointTrajectory:
+def _build_strong() -> JointTrajectory:
     """강한 자세 (주먹) — joint1 한쪽 + joint2 위 + joint3/joint4 펴기 (힘찬 reach), 2.5s hold."""
     ST = [0.5, -1.2, 0.0, 0.0]
     return _traj([
@@ -206,7 +212,7 @@ def traj_strong() -> JointTrajectory:
     ])
 
 
-def traj_sad() -> JointTrajectory:
+def _build_sad() -> JointTrajectory:
     """슬픔 (엄지 아래) — joint2 down + joint3/joint4 굽힘 (머리 숙이듯), 3.0s."""
     SD = [0.0, -0.3, 1.0, 1.0]
     return _traj([
@@ -217,7 +223,7 @@ def traj_sad() -> JointTrajectory:
     ])
 
 
-def traj_twinkle() -> JointTrajectory:
+def _build_twinkle() -> JointTrajectory:
     """반짝반짝 — joint1 ±0.4 빠르게 alternating × 4 (base 좌우), 3.6s. velocity peak 2.0 rad/s."""
     TW_R = [0.4,  -1.0, 0.5, 0.5]
     TW_L = [-0.4, -1.0, 0.5, 0.5]
@@ -249,11 +255,87 @@ def _gripper_traj(angle: float, t_sec: float = 0.5) -> JointTrajectory:
     return t
 
 
-def traj_gripper_open() -> JointTrajectory:
+def _build_gripper_open() -> JointTrajectory:
     """gripper 열기 — gripper_left_joint = +0.019 rad."""
     return _gripper_traj(GRIPPER_OPEN_ANGLE, t_sec=0.5)
 
 
-def traj_gripper_close() -> JointTrajectory:
+def _build_gripper_close() -> JointTrajectory:
     """gripper 닫기 — gripper_left_joint = -0.010 rad."""
     return _gripper_traj(GRIPPER_CLOSE_ANGLE, t_sec=0.5)
+
+
+# ─── list[Dispatch] wrappers (외부 factory — Motion.trajectory 시그니처 만족) ──────
+# OMX 는 단일 arm 이라 모든 모션이 1-element list. 그리퍼도 FollowJointTrajectory 라
+# kind='trajectory' 일관. (OpenArm 의 GripperCommand 와는 sender 가 다름.)
+
+def traj_idle() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_idle(), 'trajectory')]
+
+
+def traj_hello() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_hello(), 'trajectory')]
+
+
+def traj_bye() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_bye(), 'trajectory')]
+
+
+def traj_dance() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_dance(), 'trajectory')]
+
+
+def traj_freeze() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_freeze(), 'trajectory')]
+
+
+def traj_console() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_console(), 'trajectory')]
+
+
+def traj_hand_out() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_hand_out(), 'trajectory')]
+
+
+def traj_hands_up() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_hands_up(), 'trajectory')]
+
+
+def traj_hands_up_wave() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_hands_up_wave(), 'trajectory')]
+
+
+def traj_point_back() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_point_back(), 'trajectory')]
+
+
+def traj_nod() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_nod(), 'trajectory')]
+
+
+def traj_cheer() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_cheer(), 'trajectory')]
+
+
+def traj_heart() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_heart(), 'trajectory')]
+
+
+def traj_strong() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_strong(), 'trajectory')]
+
+
+def traj_sad() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_sad(), 'trajectory')]
+
+
+def traj_twinkle() -> list[Dispatch]:
+    return [Dispatch(ARM_ACT, _build_twinkle(), 'trajectory')]
+
+
+def traj_gripper_open() -> list[Dispatch]:
+    return [Dispatch(GRIPPER_ACT, _build_gripper_open(), 'trajectory')]
+
+
+def traj_gripper_close() -> list[Dispatch]:
+    return [Dispatch(GRIPPER_ACT, _build_gripper_close(), 'trajectory')]
