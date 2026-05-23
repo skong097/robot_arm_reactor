@@ -112,7 +112,7 @@ class DashboardNode(Node):
             'v': float(msg.valence), 'a': float(msg.arousal),
             'confidence': float(msg.confidence),
             'source': str(msg.source),
-            'track_id': int(msg.track_id) if hasattr(msg, 'track_id') else -1,
+            'track_id': int(msg.track_id),
         }
         self._push({'type': 'emotion', 'payload': self._snapshot['emotion']})
 
@@ -133,9 +133,11 @@ class DashboardNode(Node):
             payload = json.loads(msg.data)
         except json.JSONDecodeError:
             return
-        self._snapshot['reactor'] = payload
         prev = self._snapshot['reactor']
-        if prev and prev.get('current_motion') != payload.get('current_motion'):
+        self._snapshot['reactor'] = payload
+        prev_motion = prev.get('current_motion') if prev else None
+        cur_motion = payload.get('current_motion')
+        if cur_motion is not None and prev_motion != cur_motion:
             self._snapshot['events'].append({'type': 'motion', **payload})
         self._push({'type': 'reactor', 'payload': payload})
 
