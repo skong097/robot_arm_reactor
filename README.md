@@ -205,55 +205,71 @@ bash scripts/stop_demo.sh                      # ← 별칭
 ```
 robot_arm_reactor/
 ├── README.md
-├── requirements.txt
 ├── LICENSE                                # Apache-2.0
+├── requirements.txt                       # mediapipe / fastapi / uvicorn / websockets
 ├── scripts/
-│   ├── run_demo_omx.sh + stop_demo_omx.sh
-│   ├── run_demo_openarm.sh + stop_demo_openarm.sh
-│   └── run_demo.sh + stop_demo.sh         # ← *_omx.sh 별칭 (backward compat)
+│   ├── run_demo_omx.sh        + stop_demo_omx.sh
+│   ├── run_demo_openarm.sh    + stop_demo_openarm.sh
+│   └── run_demo.sh            + stop_demo.sh        # ← *_omx.sh 1줄 alias (backward compat)
 └── src/
-    ├── arm_reactor_core/                  # arm-agnostic core (3 entry_point + 대시보드)
-    │   ├── arm_reactor_core/
-    │   │   ├── context.py / motion.py / dispatch.py
-    │   │   ├── motion_mapper.py / motion_scheduler.py
-    │   │   ├── session_tracker.py / gesture_detection.py
-    │   │   ├── trajectory_sender.py (FollowJointTrajectory)
-    │   │   ├── gripper_sender.py (GripperCommand — sub-spec b)
-    │   │   ├── reactor_node.py (motion_pack_module ROS param + importlib 동적)
-    │   │   ├── dashboard_node.py (FastAPI + 6 endpoint + 3 WS)
-    │   │   ├── gesture_detector_node.py (mediapipe)
+    │
+    ├── arm_reactor_core/                              # arm-agnostic core
+    │   ├── package.xml + setup.py + setup.cfg + resource/
+    │   ├── arm_reactor_core/                          # python 모듈
+    │   │   ├── context.py        — EmotionSignal / GestureSignal / Context dataclass
+    │   │   ├── dispatch.py       — Dispatch dataclass (action_name + msg + kind)
+    │   │   ├── motion.py         — Motion dataclass (trajectory: list[Dispatch])
+    │   │   ├── motion_mapper.py / motion_scheduler.py / session_tracker.py
+    │   │   ├── gesture_detection.py    — pure logic (WaveDetector + classify_hand_state)
+    │   │   ├── trajectory_sender.py    — FollowJointTrajectory client (arm)
+    │   │   ├── gripper_sender.py       — GripperCommand client (그리퍼)
+    │   │   ├── reactor_node.py         — entry: motion_pack_module ROS param + importlib 동적
+    │   │   ├── dashboard_node.py       — entry: FastAPI + 6 endpoint + 3 WS
+    │   │   ├── gesture_detector_node.py — entry: mediapipe GestureRecognizer
     │   │   └── web/static/
-    │   │       ├── index.html + app.js + components.css + ...
-    │   │       ├── urdf_view.js (three.js + urdf-loader)
-    │   │       └── vendor/   ← three.min.js + 3 loader + URDFLoader
-    │   ├── launch/common.launch.py (arm 무관 노드 묶음)
-    │   ├── models/gesture/   ← mediapipe .task (gitignored)
-    │   └── test/  ← 52 단위 테스트
+    │   │       ├── index.html / app.js / urdf_view.js
+    │   │       ├── engagement-timeline.js / engaging-analytics.js  ← vendored doby
+    │   │       ├── components.css / style.css / tokens.css
+    │   │       └── vendor/         — three.min.js / STLLoader.js / ColladaLoader.js /
+    │   │                            OrbitControls.js / URDFLoader.js + README.md
+    │   ├── launch/common.launch.py     — arm 무관 노드 묶음 (geva + rapport + gesture + dashboard + reactor)
+    │   ├── models/gesture/             — mediapipe .task (gitignored — vendored/README.md 부트스트랩)
+    │   └── test/                       — 52 단위 테스트 (dispatch / gesture_detection / motion_mapper / motion_scheduler / session_tracker)
     │
-    ├── omx_motion_pack/                   # OMX (4-DOF) motion pack
+    ├── omx_motion_pack/                              # OMX (4-DOF) motion pack
+    │   ├── package.xml + setup.py + setup.cfg + resource/
     │   ├── omx_motion_pack/
-    │   │   ├── trajectories.py  (18 factory + ARM_ACT/GRIPPER_ACT 상수)
-    │   │   └── motions.py       (18 MOTIONS)
+    │   │   ├── trajectories.py  — 18 factory (16 arm + 2 gripper) + ARM_ACT / GRIPPER_ACT 상수
+    │   │   └── motions.py       — 18 MOTIONS (Motion 등록부)
     │   ├── launch/
-    │   │   ├── omx_demo.launch.py    (common + omx_gazebo include)
-    │   │   ├── omx_gazebo.launch.py
-    │   │   └── camera_v4l2/file/external/gazebo.launch.py
-    │   ├── models/external_cam/      (Gazebo 외부 카메라 SDF)
-    │   └── test/  ← 101 단위 테스트
+    │   │   ├── omx_demo.launch.py    — common include + omx_gazebo include
+    │   │   ├── omx_gazebo.launch.py  — open_manipulator_x_gazebo include + external_cam spawn
+    │   │   └── camera_{v4l2,file,external,gazebo}.launch.py
+    │   ├── models/external_cam/      — Gazebo 외부 카메라 SDF
+    │   └── test/                     — 101 단위 테스트 (trajectories / Dispatch action+kind)
     │
-    ├── openarm_motion_pack/               # OpenArm bimanual motion pack
+    ├── openarm_motion_pack/                          # OpenArm v10 bimanual motion pack
+    │   ├── package.xml + setup.py + setup.cfg + resource/
     │   ├── openarm_motion_pack/
-    │   │   ├── trajectories.py  (18 factory, LEFT/RIGHT × ARM/GRIP 4 controller 상수)
-    │   │   └── motions.py       (18 MOTIONS — 4 양손 특화 대체)
-    │   ├── launch/openarm_demo.launch.py  (common + openarm.bimanual include)
-    │   └── test/  ← 125 단위 테스트 (safe range 90% + velocity ≤ 2.5 rad/s)
+    │   │   ├── trajectories.py  — 18 factory + LEFT/RIGHT × ARM/GRIP 4 controller 상수
+    │   │   └── motions.py       — 18 MOTIONS (14 OMX 직역 + 4 양손 특화 대체)
+    │   ├── launch/openarm_demo.launch.py             — common include + openarm.bimanual include
+    │   └── test/                                      — 125 단위 테스트 (safe range 90% + velocity ≤ 2.5 rad/s + Dispatch action+kind + gripper position 0~0.043)
     │
-    ├── omx_reactor/                       # 옛 단일 패키지 shim (외부 import 호환만)
+    ├── omx_reactor/                                  # 옛 단일 패키지 → shim only (외부 import 호환)
+    │   ├── package.xml + setup.py
+    │   └── omx_reactor/   ← 모든 모듈이 'from arm_reactor_core.* import ...' 또는
+    │                       'from omx_motion_pack.* import ...' 1줄 shim
+    │       ├── context.py / dispatch (X) / motion (X) / motion_mapper.py / motion_scheduler.py
+    │       ├── session_tracker.py / gesture_detection.py / gesture_detector_node.py
+    │       ├── omx_trajectory_sender.py  (TrajectorySender 의 OmxTrajectorySender alias)
+    │       ├── trajectories.py / motions.py / reactor_node.py
+    │       └── (entry_point — gesture_detector_node 만, 나머지는 import-only)
     │
-    └── vendored/                          # cafe NPC funnel BT 발췌 (0 modification)
-        ├── README.md
-        ├── dobi_npc_msgs/
-        └── dobi_npc_emotion/              # geva_node + rapport_tracker
+    └── vendored/                                      # 외부 발췌 (0 modification — 추후 doby 병합 시 통째 폐기)
+        ├── README.md                                  — 출처 + 모델 부트스트랩 + 수정 정책
+        ├── dobi_npc_msgs/                             — EmotionState / RapportEvent / PersonTrack(Array) msg
+        └── dobi_npc_emotion/                          — geva_node + rapport_tracker_node + mediapipe 모델
 ```
 
 ## Development
