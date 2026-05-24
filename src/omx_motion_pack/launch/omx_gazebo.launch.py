@@ -10,8 +10,8 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
     share_robotis = get_package_share_directory('open_manipulator_bringup')
-    share_reactor = get_package_share_directory('omx_reactor')
-    sdf_path = share_reactor + '/models/external_cam/model.sdf'
+    share_pack = get_package_share_directory('omx_motion_pack')
+    sdf_path = share_pack + '/models/external_cam/model.sdf'
 
     omx_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
