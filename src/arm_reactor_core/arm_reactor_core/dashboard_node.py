@@ -29,6 +29,9 @@ from sensor_msgs.msg import Image, JointState
 from cv_bridge import CvBridge
 import cv2
 
+# sub-spec c follow-up — end-effector 좌표 표시 (양손 link7 의 world position)
+from tf2_ros import Buffer, TransformListener, TransformException
+
 from dobi_npc_msgs.msg import EmotionState, RapportEvent
 
 from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
@@ -81,6 +84,10 @@ class DashboardNode(Node):
         # sub-spec c — URDF + joint_state 캐시 (arm_view_mode='urdf' 일 때만 활용)
         self._urdf_xml: str | None = None
         self._latest_joint_state: dict | None = None
+        # end-effector world 좌표 캐시 (양손 link7 — 만세 자세 fine-tune 도구)
+        self._ee_positions: dict = {'left': None, 'right': None}
+        self._tf_buffer: Buffer | None = None
+        self._tf_listener: TransformListener | None = None
 
         # doby opserver 와 동일 state — engaging snapshot 직접 채움
         self._emotion_state: dict | None = None
@@ -126,6 +133,10 @@ class DashboardNode(Node):
         self.create_subscription(String, '/robot_description', self._on_robot_description, _rd_qos)
         if self._arm_view_mode == 'urdf':
             self.create_subscription(JointState, '/joint_states', self._on_joint_state, 10)
+            # TF listener — 양손 link7 의 world 좌표 5Hz polling (만세 자세 fine-tune 도구)
+            self._tf_buffer = Buffer()
+            self._tf_listener = TransformListener(self._tf_buffer, self)
+            self.create_timer(0.2, self._poll_ee_positions)
 
         self._app = self._build_app()
         self._thread = threading.Thread(target=self._serve, daemon=True)
@@ -147,6 +158,21 @@ class DashboardNode(Node):
             'positions': {n: float(p) for n, p in zip(msg.name, msg.position)},
         }
 
+    def _poll_ee_positions(self):
+        """양손 link7 의 world 좌표 5Hz polling (만세 자세 fine-tune 도구)."""
+        if self._tf_buffer is None:
+            return
+        for side, link in [('left', 'openarm_left_link7'), ('right', 'openarm_right_link7')]:
+            try:
+                t = self._tf_buffer.lookup_transform('world', link, rclpy.time.Time())
+                self._ee_positions[side] = [
+                    round(t.transform.translation.x, 3),
+                    round(t.transform.translation.y, 3),
+                    round(t.transform.translation.z, 3),
+                ]
+            except TransformException:
+                pass   # TF 아직 안 옴
+
     # ── FastAPI ──────────────────────────────────────────
     def _build_app(self) -> FastAPI:
         app = FastAPI(title='omx_reactor dashboard')
@@ -163,6 +189,7 @@ class DashboardNode(Node):
                 'rapport': self._omx_snapshot['rapport'],
                 'reactor': self._omx_snapshot['reactor'],
                 'events': list(self._omx_snapshot['events']),
+                'end_effector': self._ee_positions,
             })
 
         # ── sub-spec c — arm view config + URDF ────────────────

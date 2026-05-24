@@ -8,25 +8,33 @@
 #   4. fuser -k 로 카메라 device handle release (sudo 필요 가능)
 
 PATTERNS=(
-    'ros2 launch omx_reactor'
+    'ros2 launch omx_motion_pack'
+    'omx_demo.launch.py'
+    'robot_state_publisher'
     'geva_node'
     'rapport_tracker'
     'omx_reactor_node'
     'omx_dashboard_node'
     'reactor_node'
     'dashboard_node'
+    'gesture_detector_node'
     'v4l2_camera_node'
     'camera_file_pub'
+    'rviz2'
     'gz sim'
     'gzserver'
     'gzclient'
+    'gz_ros2_control'
+    'ros_gz_bridge'
+    'ros_gz_image'
     'open_manipulator_bringup'
     'controller_manager'
+    'spawner_'
     'spawner.*arm_controller'
 )
 
 # Stage 1: graceful SIGINT to ros2 launch process group (child SIGINT propagation)
-for pid in $(pgrep -f "ros2 launch omx_reactor" 2>/dev/null); do
+for pid in $(pgrep -f "ros2 launch omx_motion_pack" 2>/dev/null); do
     pgid=$(ps -o pgid= "$pid" 2>/dev/null | tr -d ' ')
     [ -n "$pgid" ] && kill -INT "-$pgid" 2>/dev/null || true
 done

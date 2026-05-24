@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>OMX Reactor — Live Demo</title>
+  <title>Robot Arm Reactor — Live Demo</title>
   <link rel="stylesheet" href="/static/tokens.css">
   <link rel="stylesheet" href="/static/components.css">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header class="omx-header">
-    <h1>OMX Reactor</h1>
+    <h1>Robot Arm Reactor</h1>
     <div class="status-bar">
       <span>모션: <b id="current_motion">-</b></span>
       <span>다음: <b id="queued_motion">-</b></span>
@@ -100,6 +100,15 @@
     <!-- 오른쪽 column — OMX Gazebo view + 모션 이벤트 -->
     <section class="card omx-right">
       <h3>OMX 모션 <span class="motion-tag" id="ea-current-motion">-</span></h3>
+
+      <!-- sub-spec c follow-up — end-effector 좌표 (양손 link7 world position, 2Hz polling) -->
+      <div id="ee-coords" class="ee-coords">
+        <span class="ee-label">EE</span>
+        <span class="ee-side">L</span>
+        <span class="ee-vals" id="ee-left">(-, -, -)</span>
+        <span class="ee-side">R</span>
+        <span class="ee-vals" id="ee-right">(-, -, -)</span>
+      </div>
 
       <!-- sub-spec c — arm view dual-mode (default both hidden, app.js 가 /api/config 보고 분기 show) -->
       <div id="view-mjpeg" hidden>

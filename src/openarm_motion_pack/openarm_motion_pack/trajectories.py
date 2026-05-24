@@ -32,11 +32,18 @@ LEFT_JOINTS  = [f'openarm_left_joint{i}'  for i in range(1, 8)]
 RIGHT_JOINTS = [f'openarm_right_joint{i}' for i in range(1, 8)]
 
 # ─── 자세 상수 ──────────────────────────────────────────────────────────────
-# HOME: 양손 늘어뜨림 (joint2 살짝 down + 나머지 0)
-HOME = [0.0, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0]
-# 만세 (joint2 up, joint4 펴기)
-UP   = [0.0, -1.5, 0.0, 0.0, 0.0, 0.0, 0.0]
-# 가리킴 (joint2 수평, joint4 0 — 정면 reach)
+# HOME: OpenArm v10 bimanual 의 default 'zero pose' — 양손 정자로 똑바로
+# (URDF default 와 일치, 사용자 시각 검증: OpenArm bringup 단독 시 default 자세).
+HOME = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+# 만세 — 양팔 북쪽 (world +Z, 위) 으로 끝까지 뻗기.
+# OpenArm URDF: joint2 axis=(-1,0,0), left base rpy=(-π/2,0,0) / right rpy=(+π/2,0,0)
+# → joint2 양수 = left 위로, right 아래로 (mirror). 만세 = left/right 별 부호 반전.
+# joint2 = ±1.57 (limit ±1.745 의 90%), joint4=0 (엘보 펴기 — 끝까지).
+UP_LEFT  = [0.0,  1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
+UP_RIGHT = [0.0, -1.57, 0.0, 0.0, 0.0, 0.0, 0.0]
+# UP (legacy — 단일 arm 자세 미사용. 양손 motion 은 UP_LEFT/UP_RIGHT 사용)
+UP   = [0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0]
+# 가리킴 (joint2 살짝 위, joint4 0 — 정면 reach)
 PT   = [0.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0]
 # 안기 (양손 안쪽으로 joint1 ±0.4)
 HUG_L = [-0.4, -0.5, 0.0, 0.5, 0.0, 0.0, 0.0]
@@ -160,31 +167,40 @@ def traj_hand_out() -> list[Dispatch]:
 
 
 def traj_hands_up() -> list[Dispatch]:
-    """양손 만세 (UP) + hold + home, 3s. peak vel ~1.20 rad/s (joint2 1.2/1s)."""
-    pts = [
-        _point(HOME, 0.4),
-        _point(UP,   1.6),
-        _point(UP,   2.1),
-        _point(HOME, 3.0),
-    ]
-    return _both_arms(pts, pts)
+    """양손 만세 (북쪽 위로 끝까지 뻗기, UP_LEFT/UP_RIGHT mirror 보정) + hold + home, 3.6s."""
+    pts_l = [_point(HOME,     0.4), _point(UP_LEFT,  1.8), _point(UP_LEFT,  2.6), _point(HOME, 3.6)]
+    pts_r = [_point(HOME,     0.4), _point(UP_RIGHT, 1.8), _point(UP_RIGHT, 2.6), _point(HOME, 3.6)]
+    return _both_arms(pts_l, pts_r)
 
 
 def traj_hands_up_wave() -> list[Dispatch]:
-    """양손 만세 + joint1 ±0.5 swing ×2, 5.4s."""
-    UP_R = [ 0.5, -1.5, 0.0, 0.0, 0.0, 0.0, 0.0]
-    UP_L = [-0.5, -1.5, 0.0, 0.0, 0.0, 0.0, 0.0]
-    pts = [
-        _point(HOME, 0.4),
-        _point(UP,   1.6),
-        _point(UP_R, 2.2),
-        _point(UP_L, 2.8),
-        _point(UP_R, 3.4),
-        _point(UP_L, 4.0),
-        _point(UP,   4.6),
-        _point(HOME, 5.4),
+    """양손 만세 (UP_LEFT/UP_RIGHT mirror 보정) + joint1 ±0.5 swing ×2, 6.0s."""
+    # 양손 위 자세 hold + joint1 양손 같이 ±0.5 swing
+    UP_L_R  = [ 0.5,  1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # left arm, joint1 +0.5
+    UP_L_L  = [-0.5,  1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # left arm, joint1 -0.5
+    UP_R_R  = [ 0.5, -1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # right arm, joint1 +0.5
+    UP_R_L  = [-0.5, -1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # right arm, joint1 -0.5
+    pts_l = [
+        _point(HOME,    0.4),
+        _point(UP_LEFT, 1.8),
+        _point(UP_L_R,  2.4),
+        _point(UP_L_L,  3.0),
+        _point(UP_L_R,  3.6),
+        _point(UP_L_L,  4.2),
+        _point(UP_LEFT, 4.8),
+        _point(HOME,    6.0),
     ]
-    return _both_arms(pts, pts)
+    pts_r = [
+        _point(HOME,     0.4),
+        _point(UP_RIGHT, 1.8),
+        _point(UP_R_R,   2.4),
+        _point(UP_R_L,   3.0),
+        _point(UP_R_R,   3.6),
+        _point(UP_R_L,   4.2),
+        _point(UP_RIGHT, 4.8),
+        _point(HOME,     6.0),
+    ]
+    return _both_arms(pts_l, pts_r)
 
 
 def traj_nod() -> list[Dispatch]:
@@ -215,14 +231,10 @@ def traj_sad() -> list[Dispatch]:
 
 
 def traj_strong() -> list[Dispatch]:
-    """양손 위 (UP) + hold, 3s. arm only (그리퍼 close 별 motion 으로 분리)."""
-    pts = [
-        _point(HOME, 0.4),
-        _point(UP,   1.6),
-        _point(UP,   2.4),
-        _point(HOME, 3.0),
-    ]
-    return _both_arms(pts, pts)
+    """양손 위 (UP_LEFT/UP_RIGHT mirror 보정) + hold, 3.6s. arm only."""
+    pts_l = [_point(HOME, 0.4), _point(UP_LEFT,  1.8), _point(UP_LEFT,  2.6), _point(HOME, 3.6)]
+    pts_r = [_point(HOME, 0.4), _point(UP_RIGHT, 1.8), _point(UP_RIGHT, 2.6), _point(HOME, 3.6)]
+    return _both_arms(pts_l, pts_r)
 
 
 def traj_twinkle() -> list[Dispatch]:

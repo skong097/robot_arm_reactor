@@ -117,3 +117,25 @@
   if (el) el.hidden = false;
   console.log('[app] arm_view_mode =', mode, '→ show #' + showId);
 })();
+
+/* sub-spec c follow-up — end-effector 좌표 2Hz polling.
+ * /api/snapshot 의 end_effector {left: [x,y,z], right: [x,y,z]} 받아 표시.
+ */
+(function () {
+  const fmt = (a) => Array.isArray(a) ? `(${a[0]}, ${a[1]}, ${a[2]})` : '(-, -, -)';
+  const elL = document.getElementById('ee-left');
+  const elR = document.getElementById('ee-right');
+  if (!elL || !elR) return;
+  async function tick() {
+    try {
+      const s = await fetch('/api/snapshot').then(r => r.json());
+      const ee = s && s.end_effector;
+      if (ee) {
+        elL.textContent = fmt(ee.left);
+        elR.textContent = fmt(ee.right);
+      }
+    } catch (e) { /* silent — next tick retry */ }
+  }
+  tick();
+  setInterval(tick, 500);   // 2 Hz
+})();
