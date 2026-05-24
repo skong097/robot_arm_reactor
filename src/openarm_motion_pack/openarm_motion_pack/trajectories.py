@@ -308,6 +308,22 @@ def traj_asymmetric_point() -> list[Dispatch]:
     return _both_arms(pts_l, pts_r)
 
 
+def traj_salute() -> list[Dispatch]:
+    """경례 — 오른손 머리 옆 (어깨 위 + 엘보 굽힘 + 손목 회전), 왼손 home idle (asym).
+    sub-spec b 결정: STRONG (closed_fist) trigger 자리 대체 — 주먹 -> 경례 의미.
+    3.0s, peak velocity ~1.2 rad/s.
+    """
+    SALUTE_POSE = [0.0, -0.8, 0.0, 1.2, 0.0, 0.0, 0.3]
+    pts_r = [
+        _point(HOME,        0.4),
+        _point(SALUTE_POSE, 1.4),
+        _point(SALUTE_POSE, 2.2),   # hold
+        _point(HOME,        3.0),
+    ]
+    pts_l = [_point(HOME, 3.0)]   # left arm idle
+    return _both_arms(pts_l, pts_r)
+
+
 def traj_handshake() -> list[Dispatch]:
     """악수 — 오른손 정면 reach (PT) + joint7 위아래 ±0.3 ×2 흔듦. left arm home idle (asym).
     sub-spec b 결정: HAND_OUT (hand_visible) trigger 자리 대체 — 그리퍼 흔듦 의미 유사.

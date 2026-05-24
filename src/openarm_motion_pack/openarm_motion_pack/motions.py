@@ -10,7 +10,7 @@ from arm_reactor_core.motion import Motion   # noqa: F401  (외부 import 호환
 from openarm_motion_pack.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
     traj_handshake, traj_hands_up, traj_hands_up_wave,
-    traj_nod, traj_sad, traj_strong, traj_twinkle, traj_gripper_open,
+    traj_nod, traj_sad, traj_salute, traj_twinkle, traj_gripper_open,
     traj_bimanual_clap, traj_bimanual_hug, traj_asymmetric_point, traj_bimanual_grip_clap,
 )
 
@@ -58,9 +58,9 @@ MOTIONS: list[Motion] = [
     Motion('SAD',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'thumb_down'),
            priority=82, cooldown_sec=5.0, trajectory=traj_sad),
-    Motion('STRONG',
+    Motion('SALUTE',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'closed_fist'),
-           priority=82, cooldown_sec=5.0, trajectory=traj_strong),
+           priority=82, cooldown_sec=5.0, trajectory=traj_salute),
 
     # 양손 특화 대체 4 (같은 trigger, 새 ID)
     Motion('BIMANUAL_CLAP',
