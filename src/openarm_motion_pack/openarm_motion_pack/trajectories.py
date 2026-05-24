@@ -308,6 +308,27 @@ def traj_asymmetric_point() -> list[Dispatch]:
     return _both_arms(pts_l, pts_r)
 
 
+def traj_handshake() -> list[Dispatch]:
+    """악수 — 오른손 정면 reach (PT) + joint7 위아래 ±0.3 ×2 흔듦. left arm home idle (asym).
+    sub-spec b 결정: HAND_OUT (hand_visible) trigger 자리 대체 — 그리퍼 흔듦 의미 유사.
+    3.5s, peak velocity ~1.0 rad/s.
+    """
+    SHAKE_UP   = [0.0, -0.5, 0.0, 0.0, 0.0, 0.0,  0.3]
+    SHAKE_DN   = [0.0, -0.5, 0.0, 0.0, 0.0, 0.0, -0.3]
+    pts_r = [
+        _point(HOME,     0.4),
+        _point(PT,       1.1),
+        _point(SHAKE_UP, 1.5),
+        _point(SHAKE_DN, 1.9),
+        _point(SHAKE_UP, 2.3),
+        _point(SHAKE_DN, 2.7),
+        _point(PT,       3.1),
+        _point(HOME,     3.5),
+    ]
+    pts_l = [_point(HOME, 3.5)]   # left arm idle
+    return _both_arms(pts_l, pts_r)
+
+
 def traj_bimanual_grip_clap() -> list[Dispatch]:
     """양 그리퍼 close + 양손 박수 동시 (4 dispatch). GRIPPER_CLOSE 대체 (gripper_close)."""
     g_close = _build_gripper(GRIPPER_CLOSE_POS)
