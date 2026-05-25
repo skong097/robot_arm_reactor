@@ -75,15 +75,69 @@ def _build_bye() -> JointTrajectory:
     ])
 
 
-def _build_dance() -> JointTrajectory:
-    """joint1 base ±0.8rad swing × 3 + joint4 wave, 4s."""
+def _build_dance_disco() -> JointTrajectory:
+    """DISCO POINT — joint2 위 (만세 자세) + joint1 ±0.5 sway ×2, 4.2s. 디스코."""
+    UP_C = [ 0.0, -1.2, 0.0, 0.0]
+    UP_R = [ 0.5, -1.2, 0.0, 0.0]
+    UP_L = [-0.5, -1.2, 0.0, 0.0]
     return _traj([
-        _point(HOME,                    0.4),
-        _point([ 0.8, -1.0, 0.5, 1.0],  1.0),
-        _point([-0.8, -1.0, 0.5, 0.0],  1.8),
-        _point([ 0.8, -1.0, 0.5, 1.0],  2.6),
-        _point([-0.8, -1.0, 0.5, 0.0],  3.4),
-        _point(HOME,                    4.0),
+        _point(HOME, 0.4),
+        _point(UP_C, 1.0),
+        _point(UP_R, 1.6), _point(UP_L, 2.2),
+        _point(UP_R, 2.8), _point(UP_L, 3.4),
+        _point(UP_C, 3.8),
+        _point(HOME, 4.2),
+    ])
+
+
+def _build_dance_robot() -> JointTrajectory:
+    """ROBOT — joint1 staccato turn-hold (±0.7 snap + 0.5s hold) ×2, 4.4s. 기계적."""
+    RT = [ 0.7, -1.0, 0.5, 0.5]
+    LT = [-0.7, -1.0, 0.5, 0.5]
+    return _traj([
+        _point(HOME, 0.3),
+        _point(RT,   0.9), _point(RT, 1.4),   # snap + hold
+        _point(LT,   2.0), _point(LT, 2.5),
+        _point(RT,   3.1), _point(RT, 3.6),
+        _point(HOME, 4.4),
+    ])
+
+
+def _build_dance_twist() -> JointTrajectory:
+    """TWIST — joint1 ±0.6 sway + joint4 wave 연속 ×3, 3.8s. 몸 트위스트."""
+    T_RA = [ 0.6, -1.0, 0.5, 1.0]
+    T_LA = [-0.6, -1.0, 0.5, 0.0]
+    return _traj([
+        _point(HOME, 0.3),
+        _point(T_RA, 0.9), _point(T_LA, 1.5),
+        _point(T_RA, 2.1), _point(T_LA, 2.7),
+        _point(T_RA, 3.3),
+        _point(HOME, 3.8),
+    ])
+
+
+def _build_dance_tango() -> JointTrajectory:
+    """TANGO SWEEP — joint1 깊은 한쪽 sweep + hold + 반대 sweep + hold, 4.5s. 드라마틱."""
+    SW_R = [ 1.0, -0.8, 0.3, 0.3]
+    SW_L = [-1.0, -0.8, 0.3, 0.3]
+    return _traj([
+        _point(HOME, 0.4),
+        _point(SW_R, 1.3), _point(SW_R, 2.0),
+        _point(SW_L, 3.0), _point(SW_L, 3.7),
+        _point(HOME, 4.5),
+    ])
+
+
+def _build_dance_pump() -> JointTrajectory:
+    """PUMP — joint2/joint4 sync 펌프 ×3 (어깨 + 손목 같이), 3.5s."""
+    UP = [0.0, -1.15, 0.5, 1.0]
+    DN = [0.0, -0.85, 0.5, 0.0]
+    return _traj([
+        _point(HOME, 0.3),
+        _point(UP,   0.8), _point(DN, 1.3),
+        _point(UP,   1.8), _point(DN, 2.3),
+        _point(UP,   2.8),
+        _point(HOME, 3.5),
     ])
 
 
@@ -148,6 +202,20 @@ def _build_hands_up_wave() -> JointTrajectory:
         _point(UP,     4.5),
         _point(HOME,   5.2),
     ])
+
+
+# DANCE rotation — 6 style variants (활기 ↔ 정적 교대). hands_up_wave 는 기존 함수 재활용.
+_DANCE_BUILDERS = [_build_dance_disco, _build_dance_robot,
+                   _build_dance_twist, _build_hands_up_wave,
+                   _build_dance_tango, _build_dance_pump]
+_dance_idx = [0]
+
+
+def _build_dance() -> JointTrajectory:
+    """DANCE rotation — 6 style 변형 순차 (disco → robot → twist → wave → tango → pump)."""
+    b = _DANCE_BUILDERS[_dance_idx[0] % len(_DANCE_BUILDERS)]
+    _dance_idx[0] += 1
+    return b()
 
 
 def _build_point_back() -> JointTrajectory:

@@ -16,7 +16,7 @@ MOTIONS: list[Motion] = [
     # 감정 4분면 (priority 10)
     Motion('DANCE',
            trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q1'),
-           priority=10, cooldown_sec=5.0, trajectory=traj_dance),
+           priority=10, cooldown_sec=1.0, trajectory=traj_dance),
     Motion('FREEZE',
            trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q2'),
            priority=10, cooldown_sec=5.0, trajectory=traj_freeze),

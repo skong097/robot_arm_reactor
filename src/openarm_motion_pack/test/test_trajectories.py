@@ -4,18 +4,18 @@ import pytest
 from arm_reactor_core.dispatch import Dispatch
 from openarm_motion_pack.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
-    traj_hand_out, traj_hands_up, traj_hands_up_wave,
-    traj_nod, traj_sad, traj_strong, traj_twinkle, traj_gripper_open,
-    traj_bimanual_clap, traj_bimanual_hug, traj_asymmetric_point, traj_bimanual_grip_clap,
+    traj_hand_out,
+    traj_sad, traj_strong, traj_gripper_open,
+    traj_bimanual_clap, traj_bimanual_hug, traj_bimanual_grip_clap,
     LEFT_ARM_ACT, RIGHT_ARM_ACT, LEFT_GRIP_ACT, RIGHT_GRIP_ACT,
     LEFT_JOINTS, RIGHT_JOINTS,
 )
 
-# arm-only factory (양손 trajectory 만, 그리퍼 dispatch 없음) — 16 개
+# arm-only factory (양손 trajectory 만, 그리퍼 dispatch 없음)
 ARM_ONLY_FACTORIES = [traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
-                      traj_hand_out, traj_hands_up, traj_hands_up_wave,
-                      traj_nod, traj_sad, traj_strong, traj_twinkle,
-                      traj_bimanual_clap, traj_bimanual_hug, traj_asymmetric_point]
+                      traj_hand_out,
+                      traj_sad, traj_strong,
+                      traj_bimanual_clap, traj_bimanual_hug]
 
 GRIPPER_ONLY_FACTORIES = [traj_gripper_open]
 MIXED_FACTORIES = [traj_bimanual_grip_clap]   # 양손 + 양 그리퍼 (4 dispatch)
@@ -136,7 +136,7 @@ def test_gripper_returns_gripper_command_goal(factory):
 
 def test_motions_count_and_loadable():
     from openarm_motion_pack.motions import MOTIONS
-    assert len(MOTIONS) == 18
+    assert len(MOTIONS) == 11
     for m in MOTIONS:
         ds = m.trajectory()
         assert isinstance(ds, list) and len(ds) >= 1

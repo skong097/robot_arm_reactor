@@ -122,23 +122,110 @@ def traj_bye() -> list[Dispatch]:
     return _both_arms(pts, pts)
 
 
-def traj_dance() -> list[Dispatch]:
-    """양손 joint1 ±0.7 sym swing ×3, 4s. peak velocity ~1.75 rad/s."""
-    pts = [
-        _point(HOME,                          0.4),
-        _point([ 0.7, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0], 1.2),
-        _point([-0.7, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0], 2.0),
-        _point([ 0.7, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0], 2.8),
-        _point([-0.7, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0], 3.6),
-        _point(HOME,                          4.4),
-    ]
+_PUNCH_M = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]   # medium
+_PUNCH_F = [0.0, 0.0, 0.0, 0.8, 0.0, 0.0, 0.0]   # fast (얕음)
+_PUNCH_S = [0.0, 0.0, 0.0, 1.5, 0.0, 0.0, 0.0]   # slow (깊음)
+
+
+def _dance_med() -> list[Dispatch]:
+    """PULSE medium — joint4=1.0 ×3, 3.5s."""
+    pts = [_point(HOME, 0.3),
+           _point(_PUNCH_M, 0.8), _point(HOME, 1.3),
+           _point(_PUNCH_M, 1.8), _point(HOME, 2.3),
+           _point(_PUNCH_M, 2.8), _point(HOME, 3.5)]
     return _both_arms(pts, pts)
+
+
+def _dance_fast() -> list[Dispatch]:
+    """PULSE fast — joint4=0.8 ×4, 3.5s."""
+    pts = [_point(HOME, 0.3),
+           _point(_PUNCH_F, 0.7), _point(HOME, 1.1),
+           _point(_PUNCH_F, 1.5), _point(HOME, 1.9),
+           _point(_PUNCH_F, 2.3), _point(HOME, 2.7),
+           _point(_PUNCH_F, 3.1), _point(HOME, 3.5)]
+    return _both_arms(pts, pts)
+
+
+def _dance_slow() -> list[Dispatch]:
+    """PULSE slow — joint4=1.5 ×2, 3.6s."""
+    pts = [_point(HOME, 0.4),
+           _point(_PUNCH_S, 1.2), _point(HOME, 2.0),
+           _point(_PUNCH_S, 2.8), _point(HOME, 3.6)]
+    return _both_arms(pts, pts)
+
+
+def _dance_alternate() -> list[Dispatch]:
+    """ALTERNATE — 좌우 한쪽씩 번갈아 joint2 raise (±0.7) ×4, 5.1s.
+    한쪽만 위로, 다른 쪽 HOME → 양손 동시 raise X → 충돌 위험 0."""
+    LEFT_UP  = [0.0,  0.7, 0.0, 0.0, 0.0, 0.0, 0.0]   # left joint2 + = up
+    RIGHT_UP = [0.0, -0.7, 0.0, 0.0, 0.0, 0.0, 0.0]   # right joint2 - = up (mirror)
+    pts_l = [_point(HOME, 0.3),
+             _point(LEFT_UP, 0.9), _point(HOME, 1.5),
+             _point(HOME, 2.1), _point(HOME, 2.7),
+             _point(LEFT_UP, 3.3), _point(HOME, 3.9),
+             _point(HOME, 4.5), _point(HOME, 5.1)]
+    pts_r = [_point(HOME, 0.3),
+             _point(HOME, 0.9), _point(HOME, 1.5),
+             _point(RIGHT_UP, 2.1), _point(HOME, 2.7),
+             _point(HOME, 3.3), _point(HOME, 3.9),
+             _point(RIGHT_UP, 4.5), _point(HOME, 5.1)]
+    return _both_arms(pts_l, pts_r)
+
+
+def _dance_wrist_shake() -> list[Dispatch]:
+    """WRIST SHAKE — joint7 ±0.4 sym 빠른 twist ×3, 3.3s.
+    joint7 URDF reflect 로 mirror 자동, 어깨/팔꿈치 HOME 유지."""
+    W_R = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  0.4]
+    W_L = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.4]
+    pts = [_point(HOME, 0.3),
+           _point(W_R, 0.7), _point(W_L, 1.1),
+           _point(W_R, 1.5), _point(W_L, 1.9),
+           _point(W_R, 2.3), _point(W_L, 2.7),
+           _point(HOME, 3.3)]
+    return _both_arms(pts, pts)
+
+
+def _dance_alternate_punch() -> list[Dispatch]:
+    """ALTERNATE PUNCH — 좌우 한쪽씩 번갈아 joint4 punch (±1.0) ×4, 4.5s.
+    한쪽만 엘보 굽힘, 다른 쪽 HOME → 행진 느낌, 충돌 위험 0."""
+    PUNCH = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+    pts_l = [_point(HOME, 0.3),
+             _point(PUNCH, 0.8), _point(HOME, 1.3),
+             _point(HOME, 1.8), _point(HOME, 2.3),
+             _point(PUNCH, 2.8), _point(HOME, 3.3),
+             _point(HOME, 3.8), _point(HOME, 4.5)]
+    pts_r = [_point(HOME, 0.3),
+             _point(HOME, 0.8), _point(HOME, 1.3),
+             _point(PUNCH, 1.8), _point(HOME, 2.3),
+             _point(HOME, 2.8), _point(HOME, 3.3),
+             _point(PUNCH, 3.8), _point(HOME, 4.5)]
+    return _both_arms(pts_l, pts_r)
+
+
+# 순서: sym ↔ asym 교대 (1,4,2,5,3,6 == med, alt, fast, wrist, slow, alt_punch)
+_DANCE_VARIANTS = [_dance_med, _dance_alternate,
+                   _dance_fast, _dance_wrist_shake,
+                   _dance_slow, _dance_alternate_punch]
+_dance_idx = [0]
+
+
+def traj_dance() -> list[Dispatch]:
+    """DANCE rotation — 6 변형 순차 (sym/asym 교대). 호출마다 다음."""
+    v = _DANCE_VARIANTS[_dance_idx[0] % len(_DANCE_VARIANTS)]
+    _dance_idx[0] += 1
+    return v()
 
 
 def traj_freeze() -> list[Dispatch]:
-    """양손 joint2 살짝 down 0.05, 1s."""
-    pts = [_point([0.0, -0.35, 0.0, 0.5, 0.0, 0.0, 0.0], 1.0)]
-    return _both_arms(pts, pts)
+    """양손 sym 살짝 droop (joint2 mirror 보정) + HOME 복귀, 1.5s.
+    joint2 부호: left 음 = down, right 양 = down (UP_LEFT/UP_RIGHT 와 동일 규칙)."""
+    DROOP_L = [0.0, -0.35, 0.0, 0.5, 0.0, 0.0, 0.0]
+    DROOP_R = [0.0,  0.35, 0.0, 0.5, 0.0, 0.0, 0.0]
+    pts_l = [_point(HOME, 0.3), _point(DROOP_L, 1.0),
+             _point(DROOP_L, 1.2), _point(HOME, 1.5)]
+    pts_r = [_point(HOME, 0.3), _point(DROOP_R, 1.0),
+             _point(DROOP_R, 1.2), _point(HOME, 1.5)]
+    return _both_arms(pts_l, pts_r)
 
 
 def traj_console() -> list[Dispatch]:
@@ -166,58 +253,6 @@ def traj_hand_out() -> list[Dispatch]:
     return _both_arms(pts, pts)
 
 
-def traj_hands_up() -> list[Dispatch]:
-    """양손 만세 (북쪽 위로 끝까지 뻗기, UP_LEFT/UP_RIGHT mirror 보정) + hold + home, 3.6s."""
-    pts_l = [_point(HOME,     0.4), _point(UP_LEFT,  1.8), _point(UP_LEFT,  2.6), _point(HOME, 3.6)]
-    pts_r = [_point(HOME,     0.4), _point(UP_RIGHT, 1.8), _point(UP_RIGHT, 2.6), _point(HOME, 3.6)]
-    return _both_arms(pts_l, pts_r)
-
-
-def traj_hands_up_wave() -> list[Dispatch]:
-    """양손 만세 (UP_LEFT/UP_RIGHT mirror 보정) + joint1 ±0.5 swing ×2, 6.0s."""
-    # 양손 위 자세 hold + joint1 양손 같이 ±0.5 swing
-    UP_L_R  = [ 0.5,  1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # left arm, joint1 +0.5
-    UP_L_L  = [-0.5,  1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # left arm, joint1 -0.5
-    UP_R_R  = [ 0.5, -1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # right arm, joint1 +0.5
-    UP_R_L  = [-0.5, -1.57, 0.0, 0.0, 0.0, 0.0, 0.0]   # right arm, joint1 -0.5
-    pts_l = [
-        _point(HOME,    0.4),
-        _point(UP_LEFT, 1.8),
-        _point(UP_L_R,  2.4),
-        _point(UP_L_L,  3.0),
-        _point(UP_L_R,  3.6),
-        _point(UP_L_L,  4.2),
-        _point(UP_LEFT, 4.8),
-        _point(HOME,    6.0),
-    ]
-    pts_r = [
-        _point(HOME,     0.4),
-        _point(UP_RIGHT, 1.8),
-        _point(UP_R_R,   2.4),
-        _point(UP_R_L,   3.0),
-        _point(UP_R_R,   3.6),
-        _point(UP_R_L,   4.2),
-        _point(UP_RIGHT, 4.8),
-        _point(HOME,     6.0),
-    ]
-    return _both_arms(pts_l, pts_r)
-
-
-def traj_nod() -> list[Dispatch]:
-    """양손 joint7 끄덕 ±0.5 ×3, 3.3s."""
-    NOD_DN = [0.0, -0.3, 0.0, 0.5, 0.0, 0.0,  0.5]
-    NOD_UP = [0.0, -0.3, 0.0, 0.5, 0.0, 0.0, -0.5]
-    pts = [
-        _point(HOME,   0.4),
-        _point(NOD_DN, 0.9),
-        _point(NOD_UP, 1.4),
-        _point(NOD_DN, 1.9),
-        _point(NOD_UP, 2.4),
-        _point(HOME,   3.3),
-    ]
-    return _both_arms(pts, pts)
-
-
 def traj_sad() -> list[Dispatch]:
     """양손 joint2 down + joint4 굽힘 + joint7 살짝 down (머리 숙임), 3s."""
     SD = [0.0, -0.15, 0.0, 1.0, 0.0, 0.0, 0.5]
@@ -235,24 +270,6 @@ def traj_strong() -> list[Dispatch]:
     pts_l = [_point(HOME, 0.4), _point(UP_LEFT,  1.8), _point(UP_LEFT,  2.6), _point(HOME, 3.6)]
     pts_r = [_point(HOME, 0.4), _point(UP_RIGHT, 1.8), _point(UP_RIGHT, 2.6), _point(HOME, 3.6)]
     return _both_arms(pts_l, pts_r)
-
-
-def traj_twinkle() -> list[Dispatch]:
-    """양손 joint1 ±0.4 sym ×4, 3.6s."""
-    TW_R = [ 0.4, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0]
-    TW_L = [-0.4, -0.3, 0.0, 0.5, 0.0, 0.0, 0.0]
-    pts = [
-        _point(HOME, 0.4),
-        _point(TW_R, 0.8),
-        _point(TW_L, 1.2),
-        _point(TW_R, 1.6),
-        _point(TW_L, 2.0),
-        _point(TW_R, 2.4),
-        _point(TW_L, 2.8),
-        _point(TW_R, 3.2),
-        _point(HOME, 3.6),
-    ]
-    return _both_arms(pts, pts)
 
 
 def traj_gripper_open() -> list[Dispatch]:
@@ -293,55 +310,6 @@ def traj_bimanual_hug() -> list[Dispatch]:
     """안기 — 양손 안쪽 펴 모음 (HUG_L/R) + hold, 3s. HEART 대체 (ilove_you)."""
     pts_l = [_point(HOME, 0.5), _point(HUG_L, 1.5), _point(HUG_L, 2.3), _point(HOME, 3.0)]
     pts_r = [_point(HOME, 0.5), _point(HUG_R, 1.5), _point(HUG_R, 2.3), _point(HOME, 3.0)]
-    return _both_arms(pts_l, pts_r)
-
-
-def traj_asymmetric_point() -> list[Dispatch]:
-    """비대칭 가리킴 — 왼손 PT (정면 reach), 오른손 home 유지, 2.5s. POINT_BACK 대체 (pointing_up)."""
-    pts_l = [
-        _point(HOME, 0.4),
-        _point(PT,   1.2),
-        _point(PT,   2.0),
-        _point(HOME, 2.5),
-    ]
-    pts_r = [_point(HOME, 2.5)]   # 오른손은 home 유지 (single point)
-    return _both_arms(pts_l, pts_r)
-
-
-def traj_salute() -> list[Dispatch]:
-    """경례 — 오른손 머리 옆 (어깨 위 + 엘보 굽힘 + 손목 회전), 왼손 home idle (asym).
-    sub-spec b 결정: STRONG (closed_fist) trigger 자리 대체 — 주먹 -> 경례 의미.
-    3.0s, peak velocity ~1.2 rad/s.
-    """
-    SALUTE_POSE = [0.0, -0.8, 0.0, 1.2, 0.0, 0.0, 0.3]
-    pts_r = [
-        _point(HOME,        0.4),
-        _point(SALUTE_POSE, 1.4),
-        _point(SALUTE_POSE, 2.2),   # hold
-        _point(HOME,        3.0),
-    ]
-    pts_l = [_point(HOME, 3.0)]   # left arm idle
-    return _both_arms(pts_l, pts_r)
-
-
-def traj_handshake() -> list[Dispatch]:
-    """악수 — 오른손 정면 reach (PT) + joint7 위아래 ±0.3 ×2 흔듦. left arm home idle (asym).
-    sub-spec b 결정: HAND_OUT (hand_visible) trigger 자리 대체 — 그리퍼 흔듦 의미 유사.
-    3.5s, peak velocity ~1.0 rad/s.
-    """
-    SHAKE_UP   = [0.0, -0.5, 0.0, 0.0, 0.0, 0.0,  0.3]
-    SHAKE_DN   = [0.0, -0.5, 0.0, 0.0, 0.0, 0.0, -0.3]
-    pts_r = [
-        _point(HOME,     0.4),
-        _point(PT,       1.1),
-        _point(SHAKE_UP, 1.5),
-        _point(SHAKE_DN, 1.9),
-        _point(SHAKE_UP, 2.3),
-        _point(SHAKE_DN, 2.7),
-        _point(PT,       3.1),
-        _point(HOME,     3.5),
-    ]
-    pts_l = [_point(HOME, 3.5)]   # left arm idle
     return _both_arms(pts_l, pts_r)
 
 

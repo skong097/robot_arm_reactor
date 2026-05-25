@@ -9,9 +9,8 @@ from arm_reactor_core.motion import Motion   # noqa: F401  (외부 import 호환
 
 from openarm_motion_pack.trajectories import (
     traj_idle, traj_hello, traj_bye, traj_dance, traj_freeze, traj_console,
-    traj_handshake, traj_hands_up, traj_hands_up_wave,
-    traj_nod, traj_sad, traj_salute, traj_twinkle, traj_gripper_open,
-    traj_bimanual_clap, traj_bimanual_hug, traj_asymmetric_point, traj_bimanual_grip_clap,
+    traj_sad, traj_gripper_open,
+    traj_bimanual_clap, traj_bimanual_hug, traj_bimanual_grip_clap,
 )
 
 
@@ -19,7 +18,7 @@ MOTIONS: list[Motion] = [
     # 감정 4분면 (priority 10)
     Motion('DANCE',
            trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q1'),
-           priority=10, cooldown_sec=5.0, trajectory=traj_dance),
+           priority=10, cooldown_sec=1.0, trajectory=traj_dance),
     Motion('FREEZE',
            trigger=lambda c: bool(c.emotion and c.emotion.quadrant == 'Q2'),
            priority=10, cooldown_sec=5.0, trajectory=traj_freeze),
@@ -40,38 +39,17 @@ MOTIONS: list[Motion] = [
            priority=100, cooldown_sec=0.0, trajectory=traj_bye),
 
     # Gesture mimic — OMX 와 동일 trigger 14 + 4 가 양손 특화 대체
-    Motion('HANDSHAKE',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'hand_visible'),
-           priority=80, cooldown_sec=5.0, trajectory=traj_handshake),
-    Motion('TWINKLE',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'twinkle'),
-           priority=82, cooldown_sec=5.0, trajectory=traj_twinkle),
-    Motion('HANDS_UP',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up'),
-           priority=85, cooldown_sec=5.0, trajectory=traj_hands_up),
-    Motion('HANDS_UP_WAVE',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'hands_up_wave'),
-           priority=90, cooldown_sec=5.0, trajectory=traj_hands_up_wave),
-    Motion('NOD',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'thumb_up'),
-           priority=82, cooldown_sec=5.0, trajectory=traj_nod),
     Motion('SAD',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'thumb_down'),
            priority=82, cooldown_sec=5.0, trajectory=traj_sad),
-    Motion('SALUTE',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'closed_fist'),
-           priority=82, cooldown_sec=5.0, trajectory=traj_salute),
 
-    # 양손 특화 대체 4 (같은 trigger, 새 ID)
+    # 양손 특화 대체 (같은 trigger, 새 ID)
     Motion('BIMANUAL_CLAP',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'victory'),
            priority=85, cooldown_sec=5.0, trajectory=traj_bimanual_clap),
     Motion('BIMANUAL_HUG',
            trigger=lambda c: bool(c.gesture and c.gesture.event == 'ilove_you'),
            priority=82, cooldown_sec=5.0, trajectory=traj_bimanual_hug),
-    Motion('ASYMMETRIC_POINT',
-           trigger=lambda c: bool(c.gesture and c.gesture.event == 'pointing_up'),
-           priority=82, cooldown_sec=5.0, trajectory=traj_asymmetric_point),
 
     # 그리퍼 — GRIPPER_OPEN (gripper_open trigger) + BIMANUAL_GRIP_CLAP (gripper_close trigger)
     Motion('GRIPPER_OPEN',
