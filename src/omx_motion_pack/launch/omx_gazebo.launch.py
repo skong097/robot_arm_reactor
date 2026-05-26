@@ -13,10 +13,16 @@ def generate_launch_description():
     share_pack = get_package_share_directory('omx_motion_pack')
     sdf_path = share_pack + '/models/external_cam/model.sdf'
 
+    # upstream open_manipulator_bringup 의 empty_world.sdf 는 gz-sim-sensors-system 플러그인이
+    # 없어서 camera <sensor> 가 publish 안 함. 우리 패키지의 패치판으로 강제 (.sdf 확장자는
+    # upstream launch 가 뒤에 자동 append).
     omx_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             share_robotis + '/launch/open_manipulator_x_gazebo.launch.py'
         ),
+        launch_arguments={
+            'world': share_pack + '/worlds/empty_with_sensors',
+        }.items(),
     )
 
     # 외부 시점 카메라 — Gazebo Sim 시작 후 충분 delay 후 spawn.

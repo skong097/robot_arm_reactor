@@ -22,6 +22,8 @@ def generate_launch_description():
                                        description='v4l2|file|external|gazebo')
     file_path_arg = DeclareLaunchArgument('file_path', default_value='',
                                           description='camera=file 의 비디오 경로')
+    video_device_arg = DeclareLaunchArgument('video_device', default_value='/dev/video0',
+                                             description='camera=v4l2 의 /dev/videoN device')
     arm_view_mode_arg = DeclareLaunchArgument('arm_view_mode', default_value='mjpeg',
                                               description='mjpeg | urdf — dashboard 우측 패널 모드')
 
@@ -33,6 +35,9 @@ def generate_launch_description():
                 ['camera_', LaunchConfiguration('camera'), '.launch.py'],
             ])
         ),
+        launch_arguments={
+            'video_device': LaunchConfiguration('video_device'),
+        }.items(),
     )
 
     geva = Node(package='dobi_npc_emotion', executable='geva_node',
@@ -55,7 +60,7 @@ def generate_launch_description():
     dashboard = Node(package='arm_reactor_core', executable='dashboard_node',
                      name='omx_dashboard_node', output='screen',
                      parameters=[{
-                         'http_port': 8800,
+                         'http_port': 7700,
                          'arm_view_mode': LaunchConfiguration('arm_view_mode'),
                      }])
 
@@ -66,7 +71,7 @@ def generate_launch_description():
                    }])
 
     return LaunchDescription([
-        motion_pack, camera_arg, file_path_arg, arm_view_mode_arg,
+        motion_pack, camera_arg, file_path_arg, video_device_arg, arm_view_mode_arg,
         camera_launch,
         geva, rapport, gesture, dashboard, reactor,
     ])

@@ -173,7 +173,7 @@ bash scripts/stop_demo_openarm.sh
 bash scripts/stop_demo.sh                      # ← 별칭
 ```
 
-대시보드: <http://localhost:8800/> (양 데모 같은 URL, arm 별 우측 패널 모드 자동 분기)
+대시보드: <http://localhost:7700/> (양 데모 같은 URL, arm 별 우측 패널 모드 자동 분기)
 
 ## Demo Scenarios
 

@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
         ('share/' + package_name + '/models/external_cam',
             glob('models/external_cam/*')),
+        ('share/' + package_name + '/worlds', glob('worlds/*.sdf')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

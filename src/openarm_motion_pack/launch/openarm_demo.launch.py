@@ -16,6 +16,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     camera_arg = DeclareLaunchArgument('camera', default_value='v4l2')
     file_path_arg = DeclareLaunchArgument('file_path', default_value='')
+    video_device_arg = DeclareLaunchArgument('video_device', default_value='/dev/video0')
 
     arc_pack = FindPackageShare('arm_reactor_core')
     openarm_bringup = FindPackageShare('openarm_bringup')
@@ -28,6 +29,7 @@ def generate_launch_description():
             'motion_pack': 'openarm_motion_pack',
             'camera': LaunchConfiguration('camera'),
             'file_path': LaunchConfiguration('file_path'),
+            'video_device': LaunchConfiguration('video_device'),
             'arm_view_mode': 'urdf',
         }.items(),
     )
@@ -42,7 +44,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        camera_arg, file_path_arg,
+        camera_arg, file_path_arg, video_device_arg,
         common,
         openarm,
     ])
